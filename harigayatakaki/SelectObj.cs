@@ -79,3 +79,4 @@ public class SelectObj : MonoBehaviour
             Setobj[1] = TargetObj[i];
     }
 }
+
