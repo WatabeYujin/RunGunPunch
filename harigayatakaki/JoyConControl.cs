@@ -80,6 +80,7 @@ public class JoyConControl : MonoBehaviour
         }
         return false;
     }
+    //コントローラーの加速度とその値の取得
     private void JoyConShake(int i)
     {
         SixAxisSensor.GetState(ref state, handle[i]);
@@ -93,11 +94,13 @@ public class JoyConControl : MonoBehaviour
         else
             ShakeCheck[i] = false;
     }
+    //加速度の値が特殊なのでVector3に変換
     private Vector3 AccelerationSst(nn.util.Float3 acceleration)
     {
         return new Vector3
             (acceleration.x, acceleration.y, acceleration.z);
     }
+    //コントローラーの傾きの取得
     private void ControllerStance(int i)
     {
         SixAxisSensor.GetState(ref state, handle[i]);
@@ -105,6 +108,7 @@ public class JoyConControl : MonoBehaviour
         quaternion.Set(npadQuaternion.x, npadQuaternion.z, npadQuaternion.y, -npadQuaternion.w);
         JoyConStance[i] = quaternion.eulerAngles;
     }
+    //アナログスティックの入力の取得
     private void GetAnalogStick(int i)
     {
         if (i == 0)
@@ -112,6 +116,7 @@ public class JoyConControl : MonoBehaviour
         if (i == 1)
             AnalogStick[i] = Set(npadState.analogStickR);
     }
+    //アナログスティックの入力が特殊なのでVector2に変換
     private Vector2 Set(AnalogStickState AnalogStick)
     {
         return new Vector2
