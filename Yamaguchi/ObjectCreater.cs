@@ -9,55 +9,54 @@ using System.IO;
 /// </summary>
 public class ObjectCreater : EditorWindow {
 
-    private GameObject parent;                                      //障害物の親のオブジェクト
-    private List<GameObject> prefabs = new List<GameObject>();      //生成するプレファブ
-    private GameObject tObj = null;                                 //listに入れておく変数
-    private int numZ = 1;                                           //Z軸に生成するオブジェクトの数
-    private float intervalZ = 1;                                    //Z軸に生成するオブジェクトの間隔
+    private GameObject parent;                                      // 障害物の親のオブジェクト
+    private List<GameObject> prefabs = new List<GameObject>();      // 生成するプレファブ
+    private GameObject tObj = null;                                 // listに入れておく変数
+    private int numZ = 1;                                           // Z軸に生成するオブジェクトの数
+    private float intervalZ = 1;                                    // Z軸に生成するオブジェクトの間隔
 
-    private int row = 3;                                            //障害物の行
-    private int column = 2;                                         //障害物の列
-    private Vector3 pos;                                            //障害物の行と列の情報を格納
+    private int row = 3;                                            // 障害物の行
+    private int column = 2;                                         // 障害物の列
+    private Vector3 pos;                                            // 障害物の行と列の情報を格納
 
-    private string outputFileName;                                  //出力するファイルの名前
-    private string dirPath = "Assets/Obstacle/";                    //出力するディレクトリのパス
-    private const int range = 3;                                    //障害物の全体の範囲
+    private string outputFileName;                                  // 出力するファイルの名前
+    private string dirPath = "Assets/Obstacle/";                    // 出力するディレクトリのパス
+    private const int range = 3;                                    // 障害物の全体の範囲
     
 
     [MenuItem("Tool/ObjectCreater")]
     static void Init()
     {
-        EditorWindow.GetWindow<ObjectCreater>(true, "ObjectCreater"); //ウィンドウを生成
+        EditorWindow.GetWindow<ObjectCreater>(true, "ObjectCreater"); // ウィンドウを生成
     }
 
     void OnEnable()
     {
-        if (Selection.gameObjects.Length > 0) parent = Selection.gameObjects[0];    
-    }
-
-    void OnSelectionChange()
-    {
-        if (Selection.gameObjects.Length > 0) prefabs[0] = Selection.gameObjects[0];
-        Repaint();
+        if (Selection.gameObjects.Length > 0) parent = Selection.gameObjects[0];    // エディタを開いた際に選択していたオブジェクトをparentに設定する
     }
 
     private void OnGUI()
     {
-        parent = EditorGUILayout.ObjectField("Parent", parent, typeof(GameObject),true) as GameObject;
+        EditorGUILayout.Space();
 
-        GUILayout.Label("Z : ", EditorStyles.boldLabel, GUILayout.Width(110));
-        numZ = int.Parse(EditorGUILayout.TextField("num", numZ.ToString()));
-        intervalZ = int.Parse(EditorGUILayout.TextField("interval", intervalZ.ToString()));
+        parent = EditorGUILayout.ObjectField("Parent", parent, typeof(GameObject),true) as GameObject;      // 親オブジェクトを設定
 
-        
+        GUILayout.Space(20.0f);
+
+        numZ = int.Parse(EditorGUILayout.TextField("num", numZ.ToString()));                                // 生成するオブジェクトの数を設定
+
+        intervalZ = int.Parse(EditorGUILayout.TextField("interval", intervalZ.ToString()));                 // オブジェクトを生成する間隔
+
+        GUILayout.Space(20.0f);
 
         for (int i = 0; i < numZ; i++)
         {
             prefabs.Add(tObj);
-            prefabs[i] = EditorGUILayout.ObjectField("Prefab" + i, prefabs[i], typeof(GameObject), true) as GameObject;          
+            prefabs[i] = EditorGUILayout.ObjectField("Prefab" + i, prefabs[i], typeof(GameObject), true) as GameObject;
+            EditorGUILayout.Space();
         }
         
-        EditorGUILayout.Space();
+        
 
         GenerationPosition();       //プレファブを生成する位置を指定
 
@@ -71,8 +70,7 @@ public class ObjectCreater : EditorWindow {
         {
             using(new GUILayout.HorizontalScope(EditorStyles.toolbar))
             {
-                GUILayout.Label("PrefabName ");
-                outputFileName = EditorGUILayout.TextField(outputFileName);
+                outputFileName = EditorGUILayout.TextField("PrefabName ",outputFileName);     //保存するプレファブの名前の設定
             }
 
             using(new GUILayout.HorizontalScope())
@@ -103,11 +101,12 @@ public class ObjectCreater : EditorWindow {
             {
                 if (GUILayout.Button(""))
                 {
-                    pos.x = j * range;
-                    pos.y = i * range;
-                    pos.z = 0;
+                    pos.x = j * range;      //障害物のX方向の間隔の設定
+
+                    pos.y = i * range;      //障害物のY方向の間隔の設定
+
                     //if (j == 2) pos.y = i * 3 + 1;
-                    Debug.Log("posX " + pos.x + "posY " + pos.y + "posZ" + pos.z);
+                  
                 }
             }
             GUILayout.EndHorizontal();
@@ -123,17 +122,20 @@ public class ObjectCreater : EditorWindow {
     {
         if (prefabs[0] == null) return;
 
-        int count = 0;
+        int count = 0;                                                                              // 生成したオブジェクトに付ける番号
 
-        pos.z = -(numZ - 1) * intervalZ / 2;
+        pos.z = -(numZ - 1) * intervalZ / 2;                                                        // 最初に生成するオブジェクトのポジションZ
         for (int i = 0; i < numZ; i++)
         {
-            GameObject obj = Instantiate(prefabs[i], pos, Quaternion.identity) as GameObject;
-            obj.name = prefabs[i].name + count++;
-            if (parent) obj.transform.parent = parent.transform;
-            Undo.RegisterCreatedObjectUndo(obj, "Object Creater");
+            GameObject obj = Instantiate(prefabs[i], pos, Quaternion.identity) as GameObject;       // オブジェクト生成
 
-            pos.z += intervalZ;
+            obj.name = prefabs[i].name + count++;                                                   // 生成したオブジェクトの名前に番号を付ける
+
+            if (parent) obj.transform.parent = parent.transform;                                    // parentがあればparentの子オブジェクトにする
+
+            Undo.RegisterCreatedObjectUndo(obj, "Object Creater");                                  // オブジェクトを生成したものをUndo履歴に入れる
+
+            pos.z += intervalZ;                                                                     // ポジションZをintervalZの数値だけ間隔をあける
             //pos.y -= z * 0.5f;
         } 
         
@@ -146,20 +148,21 @@ public class ObjectCreater : EditorWindow {
     {
         if (!Directory.Exists(dirPath))
         {
-            //prefab保存用のフォルダがなければ作成する
-            Directory.CreateDirectory(dirPath);
+            
+            Directory.CreateDirectory(dirPath);                            //prefab保存用のフォルダがなければ作成する
         }
 
-        //prefabの保存ファイルパス
-        string prefabPath = dirPath + outputFileName + ".prefab";
+        
+        string prefabPath = dirPath + outputFileName + ".prefab";          //prefabの保存ファイルパス
         if (!File.Exists(prefabPath))
         {
-            //prefabファイルがなければ作成する
-            File.Create(prefabPath);
+            
+            File.Create(prefabPath);                                        //prefabファイルがなければ作成する
         }
 
-        //prefabの保存
-        UnityEditor.PrefabUtility.CreatePrefab(prefabPath, parent);
-        UnityEditor.AssetDatabase.SaveAssets();
+        
+        UnityEditor.PrefabUtility.CreatePrefab(prefabPath, parent);         //prefabの保存
+
+        UnityEditor.AssetDatabase.SaveAssets();                             //prefabの保存
     }
 }
