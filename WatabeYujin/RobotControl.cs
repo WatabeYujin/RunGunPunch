@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class RobotControl : MonoBehaviour {
+public class RobotControl : MonoBehaviour
+{
     [SerializeField]
-    private Transform[] centerShotTransform = 
+    private Transform[] centerShotTransform =
         new Transform[2];                       //中央の攻撃判定の位置（配列0＝1P,配列1＝2P）
     [SerializeField]
     private Transform[] rightShotTransform =
@@ -12,6 +13,15 @@ public class RobotControl : MonoBehaviour {
     [SerializeField]
     private Transform[] leftShotTransform =
         new Transform[2];                       //左の攻撃判定の位置（配列0＝1P,配列1＝2P）
+    [SerializeField]
+    private LineRenderer lineRenderer;          //攻撃時に表示するラインのLineRenderer
+    [SerializeField]
+    private Material[] lineMaterials=
+        new Material[2];                        //攻撃時表示するLineRendererのMaterial
+    [SerializeField]
+    private float attackDistance = 15;          //最大射程
+
+    IEnumerator lineDeleteIEnumerator;
 
     public enum Lane                            //攻撃レーンの位置
     {
@@ -21,6 +31,10 @@ public class RobotControl : MonoBehaviour {
     }
 
     ///////////////////////////////////////////////////////////////////////////////////
+    void Start() {
+        lineDeleteIEnumerator = LineRendererDelete();
+        
+    }
 
     /// <summary>
     /// プレイヤーの攻撃の処理を行う
@@ -29,17 +43,28 @@ public class RobotControl : MonoBehaviour {
     /// <param name="attackLane">攻撃するレーンの位置(enum)</param>
     public void Attack(int playerID, Lane attackLane)
     {
-        GameObject m_hitTargetObject=null;
+        GameObject m_hitTargetObject = null;
+        Transform m_shotTransform = null;
 
         if (attackLane == Lane.Center)
-            m_hitTargetObject = AttackRayCast(centerShotTransform[playerID]);
+            m_shotTransform = centerShotTransform[playerID];
         if (attackLane == Lane.Right)
-            m_hitTargetObject = AttackRayCast(rightShotTransform[playerID]);
+            m_shotTransform = rightShotTransform[playerID];
         if (attackLane == Lane.Left)
-            m_hitTargetObject = AttackRayCast(leftShotTransform[playerID]);
+            m_shotTransform = leftShotTransform[playerID];
+
+        m_hitTargetObject = AttackRayCast(m_shotTransform);                     //Rayによる命中判定を行う
 
         if (m_hitTargetObject != null)
+        {
             m_hitTargetObject.GetComponent<TargetObject>().Damage(playerID);
+            RayView(lineMaterials[playerID], m_shotTransform.position, m_hitTargetObject.transform.position);
+        }
+        else
+        {
+            Vector3 m_endPosition = m_shotTransform.position + (m_shotTransform.transform.forward * attackDistance);
+            RayView(lineMaterials[playerID], m_shotTransform.position, m_endPosition);
+        }
     }
 
     /// <summary>
@@ -62,17 +87,30 @@ public class RobotControl : MonoBehaviour {
     private GameObject AttackRayCast(Transform shotTransform)
     {
         Ray m_attackRay = new Ray(shotTransform.position, shotTransform.forward);
-        RaycastHit m_hit;
-        const float m_attackDistance = 10f;                                         //レイの距離
+        RaycastHit m_hit;                                 //レイの距離
         const string m_targetTagName = "Target";
-        if (!Physics.Raycast(m_attackRay, out m_hit, m_attackDistance))
+        if (!Physics.Raycast(m_attackRay, out m_hit, attackDistance))
             return null;
         if (m_hit.collider.tag != m_targetTagName)
             return null;
         return m_hit.collider.gameObject;
-            
     }
 
 
-    
+    private void RayView(Material lineMaterial, Vector3 shotPosition, Vector3 endPosition)
+    {
+        lineRenderer.enabled = true;
+        lineRenderer.material = lineMaterial;
+        lineRenderer.SetPosition(0, shotPosition);
+        lineRenderer.SetPosition(1, endPosition);
+        StopCoroutine(lineDeleteIEnumerator);
+        StartCoroutine(lineDeleteIEnumerator);
+    }
+
+    private IEnumerator LineRendererDelete()
+    {
+        const float m_deleteTime = 0.5f;
+        yield return new WaitForSeconds(m_deleteTime);
+        lineRenderer.enabled = false;
+    }
 }

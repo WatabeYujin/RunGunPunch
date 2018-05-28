@@ -9,8 +9,10 @@ public class TargetObject : MonoBehaviour {
     private TargetType targetType;  //自身のターゲットの種類(enum)
     [SerializeField]
     private Rigidbody thisRigidbody;//自身のrigidBody
+    [SerializeField]
+    PlaySceneManager SceneManager;
+    private float speed = 0;        //オブジェクトの移動スピード
 
-    private float speed = 1;        //オブジェクトの移動スピード
     private bool isMove = true;     //移動しているか否か
 
     private enum TargetType         //ターゲットの種類
@@ -20,8 +22,13 @@ public class TargetObject : MonoBehaviour {
         Composite = 2
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////
 
+
+    ////////////////////////////////////////////////////////////////////////////////////
+    void Start()
+    {
+        speed = PlaySceneManager.SceneManager.GetSpeed();
+    }
     void Update () {
         TargetMove();
     }
@@ -32,7 +39,7 @@ public class TargetObject : MonoBehaviour {
     void TargetMove()
     {
         if (!isMove) return;
-        transform.position = transform.forward * speed;
+        transform.position += transform.forward * speed;
     }
 
     /// <summary>
@@ -46,6 +53,15 @@ public class TargetObject : MonoBehaviour {
         //バフ系の処理をここに入れる//
         DestroyEvent();
 
+    }
+
+    void PlayerAttackEvent()
+    {
+        //デバフ系の処理をここに入れる//
+
+
+        //デバフ系の処理をここに入れる//
+        DestroyEvent();
     }
 
     /// <summary>
@@ -67,6 +83,13 @@ public class TargetObject : MonoBehaviour {
             Transform m_effectTrans = Instantiate(BreakEffect).transform;
             m_effectTrans.position = transform.position;
         }
+    }
+
+    void OnTriggerEnter(Collider col)
+    {
+        const string m_playerTag = "Player";
+        if (col.tag != m_playerTag) return;
+        PlayerAttackEvent();
     }
 
     ////////////////////////////////////////////////////////////////////////////////////
@@ -92,4 +115,5 @@ public class TargetObject : MonoBehaviour {
         }
         else return false;
     }
+
 }
