@@ -128,20 +128,20 @@ public class ObjectCreater : EditorWindow {
     {
         if (prefabs[0] == null) return;
 
-        int count = 0;                                                                              // 生成したオブジェクトに付ける番号
+        int m_count = 0;                                                                              // 生成したオブジェクトに付ける番号
 
         pos.z = -(numZ - 1) * intervalZ / 2;                                                        // 最初に生成するオブジェクトのポジションZ
         for (int i = 0; i < numZ; i++)
         {
             if (prefabs[i])
             {
-                GameObject obj = Instantiate(prefabs[i], pos, Quaternion.identity) as GameObject;       // オブジェクト生成
+                GameObject m_obj = Instantiate(prefabs[i], pos, Quaternion.identity) as GameObject;       // オブジェクト生成
 
-                obj.name = prefabs[i].name + count++;                                                   // 生成したオブジェクトの名前に番号を付ける
+                m_obj.name = prefabs[i].name + m_count++;                                                   // 生成したオブジェクトの名前に番号を付ける
 
-                if (parent) obj.transform.parent = parent.transform;                                    // parentがあればparentの子オブジェクトにする
+                if (parent) m_obj.transform.parent = parent.transform;                                    // parentがあればparentの子オブジェクトにする
 
-                Undo.RegisterCreatedObjectUndo(obj, "Object Creater");                                  // オブジェクトを生成したものをUndo履歴に入れる
+                Undo.RegisterCreatedObjectUndo(m_obj, "Object Creater");                                  // オブジェクトを生成したものをUndo履歴に入れる
             }
             
 
@@ -163,15 +163,10 @@ public class ObjectCreater : EditorWindow {
         }
 
         
-        string prefabPath = dirPath + outputFileName + ".prefab";          //prefabの保存ファイルパス
-        if (!File.Exists(prefabPath))
-        {
-            
-            File.Create(prefabPath);                                        //prefabファイルがなければ作成する
-        }
-
+        string m_prefabPath = dirPath + outputFileName + ".prefab";          //prefabの保存ファイルパス
         
-        UnityEditor.PrefabUtility.CreatePrefab(prefabPath, parent);         //指定のファイルにprefabファイルを作成
+        
+        UnityEditor.PrefabUtility.CreatePrefab(m_prefabPath, parent);         //指定のファイルにprefabファイルを作成
 
         UnityEditor.AssetDatabase.SaveAssets();                             //prefabの保存
     }
