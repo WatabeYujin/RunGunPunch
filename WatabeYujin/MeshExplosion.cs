@@ -6,6 +6,8 @@ using System.Linq;
 
 public class MeshExplosion : MonoBehaviour {
     //オブジェクトをバラバラにして吹き飛ばすスクリプト
+    [SerializeField]
+    int maxTriangles = 30;
 
     public void Explode(Transform target,Vector3 center,Vector3 moveVerocity)
     {
@@ -32,17 +34,27 @@ public class MeshExplosion : MonoBehaviour {
         target.GetComponent<Collider>().enabled = false;
 
         // get each face
-        int m_objcount = triangles.Length % 30;
+        int m_objcount = triangles.Length / 3;
+        m_objcount = m_objcount / maxTriangles;
         Debug.Log(m_objcount);
-        for (int i = 0; i < triangles.Length; i += 3 + m_objcount)
         //for (int i = 0; i < triangles.Length; i += 3)
+        for (int i = 0; i < triangles.Length; i += 3 * m_objcount)
         {
             // TODO: inherit speed, spin...?
             Vector3 averageNormal = (normals[triangles[i]] + normals[triangles[i + 1]] + normals[triangles[i + 2]]).normalized;
             Vector3 s = target.GetComponent<Renderer>().bounds.size;
             float extrudeSize = ((s.x + s.y + s.z) / 3) * 0.3f;
-
-            Rigidbody r = CreateMeshPiece(extrudeSize, target.transform.position, target.GetComponent<Renderer>().material, index, averageNormal, vertices[triangles[i]], vertices[triangles[i + 1]], vertices[triangles[i + 2]], uvs[triangles[i]], uvs[triangles[i + 1]], uvs[triangles[i + 2]]);
+            List<Vector3> m_verticesList = new List<Vector3>();
+            for (int j = 0; j < 3 * m_objcount; j++)
+            {
+                if(vertices[i + j]!=null) m_verticesList.Add(vertices[i + j]);
+            }
+            List<Vector2> m_uvList = new List<Vector2>();
+            for(int j=0;j< 3 * m_objcount; j++)
+            {
+                m_uvList.Add(uvs[triangles[j]]);
+            }
+            Rigidbody r = CreateMeshPiece(extrudeSize, target.transform.position, target.GetComponent<Renderer>().material, index, averageNormal, m_verticesList, m_uvList);
             
             Vector3 testt = (vertices[triangles[i]] + vertices[triangles[i + 1]] + vertices[triangles[i + 2]]) / 3;
             
@@ -56,9 +68,8 @@ public class MeshExplosion : MonoBehaviour {
         Destroy(target.gameObject);
     }
 
-    Rigidbody CreateMeshPiece(float extrudeSize, Vector3 pos, Material mat, int index, Vector3 faceNormal, Vector3 v1, Vector3 v2, Vector3 v3, Vector2 uv1, Vector2 uv2, Vector2 uv3)
+    Rigidbody CreateMeshPiece(float extrudeSize, Vector3 pos, Material mat, int index, Vector3 faceNormal, List<Vector3> verticeList, List<Vector2> uvList)
     {
-
         GameObject go = new GameObject();
         go.name = "piece_" + index;
         Mesh mesh = go.AddComponent<MeshFilter>().mesh;
@@ -67,34 +78,56 @@ public class MeshExplosion : MonoBehaviour {
         go.GetComponent<Renderer>().material = mat;
         go.transform.position = pos;
 
-        Vector3[] vertices = new Vector3[3 * 4];
-        int[] triangles = new int[3 * 4];
-        Vector2[] uvs = new Vector2[3 * 4];
+        Vector3[] vertices = new Vector3[3 * (verticeList.Count+1)];
+        int[] triangles = new int[3 * (verticeList.Count + 1)];
+        Vector2[] uvs = new Vector2[3 * (verticeList.Count + 1)];
 
         // get centroid
-        Vector3 v4 = (v1 + v2 + v3) / 3;
-        // extend to backwards
-        v4 = v4 + ((-faceNormal) * extrudeSize)/2;
 
-        // not shared vertices
-        // orig face
-        //vertices[0] = (v1);
-        vertices[0] = (v1);
-        vertices[1] = (v2);
-        vertices[2] = (v3);
-        // right face
-        vertices[3] = (v1);
-        vertices[4] = (v2);
-        vertices[5] = (v4);
+        Vector3 m_verticeCemter = Vector3.zero;
+        foreach(Vector3 verticesPos in verticeList)
+        {
+            m_verticeCemter += verticesPos;
+        }
+        m_verticeCemter /= verticeList.Count;
+        m_verticeCemter = m_verticeCemter + ((-faceNormal) * extrudeSize) / 2;
+        verticeList.Add(m_verticeCemter);
+
+        List<int[]> m_CombineArray = CombineSet(verticeList.Count);
+        Debug.Log(m_CombineArray);
+        for(int i = 0;i<triangles.Length;i+=3)
+        {
+            triangles[i] = m_CombineArray[i/3][0];
+            triangles[i+1] = m_CombineArray[i / 3][1];
+            triangles[i+2] = m_CombineArray[i / 3][2];
+        }
+        for (int i = 0; i < uvs.Length; i ++)
+        {
+            uvs[i] = uvList[i];
+            uvs[i] = uvList[i+1];
+            uvs[i] = uvList[i+2];
+
+            /*
+                    // orig face
+        uvs[0] = uv1;
+        uvs[1] = uv2;
+        uvs[2] = uv3; // todo
+                      // right face
+        uvs[3] = uv1;
+        uvs[4] = uv2;
+        uvs[5] = uv3; // todo
+
         // left face
-        vertices[6] = (v1);
-        vertices[7] = (v3);
-        vertices[8] = (v4);
-        // bottom face
-        vertices[9] = (v2);
-        vertices[10] = (v3);
-        vertices[11] = (v4);
-
+        uvs[6] = uv1;
+        uvs[7] = uv3;
+        uvs[8] = uv3;   // todo
+                        // bottom face (mirror?) or custom color? or fixed from uv?
+        uvs[9] = uv1;
+        uvs[10] = uv2;
+        uvs[11] = uv1; // todo
+             */
+        }
+        /*
         // orig face
         triangles[0] = 0;
         triangles[1] = 1;
@@ -129,7 +162,7 @@ public class MeshExplosion : MonoBehaviour {
         uvs[9] = uv1;
         uvs[10] = uv2;
         uvs[11] = uv1; // todo
-
+        */
         mesh.vertices = vertices;
         mesh.uv = uvs;
         mesh.triangles = triangles;
@@ -145,30 +178,52 @@ public class MeshExplosion : MonoBehaviour {
 
         //go.AddComponent<MeshFader>();
     }
-}
 
-public static class Combination
-{
-    public static IEnumerable<T[]> CombinationEnumerate<T>(IEnumerable<T> items, int combinationCount)
+    private List<int[]> CombineSet(int listLength)
     {
-        if (combinationCount == 1)
+        int s = listLength;
+        const int m_combineCount = 3;
+        int m = m_combineCount;
+        for(int i = 1; i < m_combineCount; i++)
         {
-            foreach (var item in items)
-                yield return new T[] { item };
-            yield break;
+            s *= listLength - i;
+            m *= m_combineCount - i;
         }
-        foreach (var item in items)
+        s = s/m;
+        
+        List<int[]> m_returnCombine =new List<int[]>();
+        
+        m_returnCombine.Add(new int[3] { 0, 1, 2 });
+        for (int i = 1; i < s; i++)
         {
-            var leftside = new T[] { item };
-
-            // item よりも前のものを除く （順列と組み合わせの違い)
-            // 重複を許さないので、unusedから item そのものも取り除く
-            var unused = items.SkipWhile(e => !e.Equals(item)).Skip(1).ToList();
-
-            foreach (var rightside in CombinationEnumerate(unused, combinationCount - 1))
+            int[] n = new int[m_combineCount];
+            int m_digit = m_combineCount - 1;
+            for (int j = m_combineCount - 1; j >= 0; j--)
             {
-                yield return leftside.Concat(rightside).ToArray();
+                Debug.Log("j"+j);
+                n[j] = m_returnCombine[i - 1][j];
+                if(m_digit==j && m_returnCombine[i - 1][j] < listLength) n[j]++;
+                else m_digit--;
             }
+            Debug.Log(m_returnCombine);
+            m_returnCombine.Add(n);
         }
+        /*
+         for (int j = m_combineCount - 1; j >= 0; j--)
+            {
+                Debug.Log("j"+j);
+                if (m_digit > j) n[j] = m_returnCombine[i - 1][j];
+                else
+                {
+                    if (m_returnCombine[i - 1][j] < s + 1) n[j] = m_returnCombine[i - 1][j] + 1;
+                    else
+                    {
+                        n[j] = m_returnCombine[i - 1][j];
+                        m_digit--;
+                    }
+                }
+            }
+         */
+        return m_returnCombine;
     }
 }
