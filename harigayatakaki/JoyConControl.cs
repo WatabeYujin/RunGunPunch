@@ -6,10 +6,13 @@ using UnityEngine.UI;
 
 public enum Style
 { Up, Down, Push }
+public enum Hand
+{ Left, Right }
 
 public class JoyConControl : MonoBehaviour
 {
-    
+    public GameObject[] controllers = new GameObject[2];
+
     [SerializeField]
     private Text textComponent;
     private System.Text.StringBuilder stringBuilder = new System.Text.StringBuilder();
@@ -26,7 +29,8 @@ public class JoyConControl : MonoBehaviour
 
     private nn.util.Float4 npadQuaternion = new nn.util.Float4();
 
-
+    class InputSet { public bool Push, Keep, Back = false; }
+    Dictionary<NpadButton, InputSet> ButtonKeep = new Dictionary<NpadButton, InputSet>();
     float AnalogStickMax = 32767;
     int[] HandShake = new int[] { 0, 0 };
     private Quaternion quaternion = new Quaternion();
@@ -34,7 +38,6 @@ public class JoyConControl : MonoBehaviour
     private Vector3[] JoyConAcceleration = new Vector3[] { Vector3.zero, Vector3.zero };
     Vector2[] AnalogStick = new Vector2[] { Vector2.zero, Vector2.zero };
     bool[] ShakeCheck = new bool[] { false, false };
-
     void Start()
     {
         textComponent = GameObject.Find("/Canvas/Text").GetComponent<UnityEngine.UI.Text>();
@@ -54,33 +57,23 @@ public class JoyConControl : MonoBehaviour
             for (int i = 0; i < handleCount; i++)
             {
                 SixAxisSensor.GetState(ref state, handle[i]);
+
                 JoyConShake(i);
-                GetAnalogStick(i);
+                SetAnalogStick(i);
                 ControllerStance(i);
+                JoyConAcceleration[i] =test(i);
                 stringBuilder.AppendFormat(
-                "{0}[{1}]:\nShakeCheck({2})\nAnalogStick({3})\nVector3\n(X:{4})\n(Y:{5})\n(Z:{6})\n",
+                "{0}[{1}]:\nShakeCheck({2})\nAnalogStick({3})\nVector3\n(X:{4})\n(Y:{5})\n(Z:{6})\nJoyConAcceleration\n(X:{7})\n(Y:{8})\n(Z:{9})",
                 npadStyle.ToString(), i + 1, ShakeCheck[i], AnalogStick[i],
-                JoyConStance[i].x, JoyConStance[i].y, JoyConStance[i].z);
+                JoyConStance[i].x, JoyConStance[i].y, JoyConStance[i].z,
+                JoyConAcceleration[i].x, JoyConAcceleration[i].y, JoyConAcceleration[i].z);
 
                 textComponent.text = stringBuilder.ToString();
             }
         }
     }
 
-    /// <summary>Buttonの入力</summary>
-    /// <param name="input">入力するButton</param>
-    /// <param name="Style">入力の種類（引数無しの時は押しっぱなし）</param>
-    public bool ButtonGet(NpadButton input, Style Push = Style.Push)
-    {
-        switch (Push)
-        {
-            case Style.Up: return npadState.GetButtonUp(input);
-            case Style.Down: return npadState.GetButtonDown(input);
-            case Style.Push: return npadState.GetButton(input);
-        }
-        return false;
-    }
-    //コントローラーの加速度とその値の取得
+    //振ったかどうかの判定
     private void JoyConShake(int i)
     {
         SixAxisSensor.GetState(ref state, handle[i]);
@@ -88,19 +81,28 @@ public class JoyConControl : MonoBehaviour
         float x = Mathf.Abs(state.acceleration.x);
         float y = Mathf.Abs(state.acceleration.y);
         float z = Mathf.Abs(state.acceleration.z);
-        JoyConAcceleration[i] = AccelerationSst(state.acceleration);
         if (x >= 5 || y >= 5 || z >= 5)
             ShakeCheck[i] = true;
         else
             ShakeCheck[i] = false;
     }
-    //加速度の値が特殊なのでVector3に変換
-    private Vector3 AccelerationSst(nn.util.Float3 acceleration)
+    /// <summary> Float3をVector3に変換</summary>
+    private Vector3 Float3toVector3(nn.util.Float3 Float3)
     {
         return new Vector3
-            (acceleration.x, acceleration.y, acceleration.z);
+            (Float3.x, Float3.y, Float3.z);
     }
-    //コントローラーの傾きの取得
+    private Vector3 test(int i)
+    {
+        Quaternion asd = quaternion * Quaternion.Euler(90f, 0f, 0f);
+        Vector3 vector3 = asd * new Vector3(0, 0, -1);
+        return vector3;
+    }
+    private Vector3 Float3toVector3_(nn.util.Float3 Float3)
+    {
+        return new Vector3
+            (Float3.x - 0.5f, Float3.y - 0.5f, Float3.z - 0.5f);
+    }
     private void ControllerStance(int i)
     {
         SixAxisSensor.GetState(ref state, handle[i]);
@@ -108,20 +110,21 @@ public class JoyConControl : MonoBehaviour
         quaternion.Set(npadQuaternion.x, npadQuaternion.z, npadQuaternion.y, -npadQuaternion.w);
         JoyConStance[i] = quaternion.eulerAngles;
     }
-    //アナログスティックの入力の取得
-    private void GetAnalogStick(int i)
+    //アナログスティックの入力
+    private void SetAnalogStick(int i)
     {
         if (i == 0)
             AnalogStick[i] = Set(npadState.analogStickL);
         if (i == 1)
             AnalogStick[i] = Set(npadState.analogStickR);
     }
-    //アナログスティックの入力が特殊なのでVector2に変換
+    //Float2をVector2に変換
     private Vector2 Set(AnalogStickState AnalogStick)
     {
         return new Vector2
             (AnalogStick.x / AnalogStickMax, AnalogStick.y / AnalogStickMax);
     }
+
     private void NowStyle()
     {
 
@@ -208,36 +211,73 @@ public class JoyConControl : MonoBehaviour
             SixAxisSensor.Start(handle[i]);
         }
     }
-    public class JoyConInput
+    /// <summary>Buttonの入力</summary>
+    /// <param name="input">入力するButton</param>
+    /// <param name="Push">入力の種類（引数無しの時は押しっぱなし）</param>
+    public bool ButtonGet(NpadButton input, Style style = Style.Push)
     {
-        /// <summary>左のアナログスティックの入力</summary>
-        public Vector2 LeftAnalogStick;
-        /// <summary>右のアナログスティックの入力</summary>
-        public Vector2 RightAnalogStick;
-        /// <summary>左の振った判定</summary>
-        public bool LeftShakeCheck;
-        /// <summary>右の振った判定</summary>
-        public bool RightShakeCheck;
-        /// <summary>左のJoyConのジャイロのVector3</summary>
-        public Vector3 LeftJoyConStance;
-        /// <summary>右のJoyConのジャイロのVector3</summary>
-        public Vector3 RightJoyConStance;
-        /// <summary>左のJoyConのAccelerationのVector3</summary>
-        public Vector3 LeftJoyConAcceleration;
-        /// <summary>右のJoyConのAccelerationのVector3</summary>
-        public Vector3 RightJoyConAcceleration;
+        try
+        {
+            return GetButtonSet(ButtonKeep[input], input, style);
+        }
+        catch (KeyNotFoundException)
+        {
+            ButtonKeep[input] = new InputSet();
+            return GetButtonSet(ButtonKeep[input], input, style);
+        }
     }
-    public JoyConInput InputGet()
+    private bool GetButtonSet(InputSet inputSet, NpadButton input, Style style)
     {
-        JoyConInput Get_Input = new JoyConInput();
-        Get_Input.LeftAnalogStick = AnalogStick[0];
-        Get_Input.LeftJoyConStance = JoyConStance[0];
-        Get_Input.LeftShakeCheck = ShakeCheck[0];
-        Get_Input.LeftJoyConAcceleration = JoyConAcceleration[0];
-        Get_Input.RightAnalogStick = AnalogStick[1];
-        Get_Input.RightJoyConStance = JoyConStance[1];
-        Get_Input.RightShakeCheck = ShakeCheck[1];
-        Get_Input.RightJoyConAcceleration= JoyConAcceleration[1];
-        return Get_Input;
+        inputSet.Push = npadState.GetButtonDown(input);
+        if (style == Style.Down) inputSet.Back = inputSet.Push && !inputSet.Keep;
+        if (style == Style.Up) inputSet.Back = !inputSet.Push && inputSet.Keep;
+        inputSet.Keep = inputSet.Push;
+        if (style == Style.Push) return inputSet.Keep;
+        return inputSet.Back;
+
+    }
+    /// <summary>アナログスティックの入力を取得</summary>
+    /// <param name="hand">持ち手</param>
+    /// <returns>アナログスティックで入力されたVector2</returns>
+    public Vector2 AnalogStickGet(Hand hand)
+    {
+        switch (hand)
+        {
+            case Hand.Left:
+                return AnalogStick[0];
+            case Hand.Right:
+                return AnalogStick[1];
+        }
+        return Vector2.zero;
+    }
+    /// <summary>JoyConの傾きの取得</summary>
+    /// <param name="hand">持ち手</param>
+    /// <returns>JoyConStanceのVector3</returns>
+    public Vector3 JoyConStanceGet(Hand hand)
+    {
+        switch (hand)
+        {
+            case Hand.Left:
+                return JoyConStance[0];
+            case Hand.Right:
+                return JoyConStance[1];
+        }
+        return Vector3.zero;
+    }
+    /// <summary>JoyConの加速度の取得</summary>
+    /// <param name="hand">持ち手</param>
+    /// <returns>AccelerationのVector3</returns>
+    public Vector3 AccelerationGet(Hand hand)
+    {
+        Vector3 m_leftHandAcc = new Vector3(0, 1, 0);
+        Vector3 m_rightHandAcc = new Vector3(0, -1, 0);
+        switch (hand)
+        {
+            case Hand.Left:
+                return JoyConAcceleration[0];
+            case Hand.Right:
+                return JoyConAcceleration[1] + m_rightHandAcc;
+        }
+        return Vector3.zero;
     }
 }
