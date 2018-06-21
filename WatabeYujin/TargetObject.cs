@@ -8,10 +8,11 @@ public class TargetObject : MonoBehaviour {
     [SerializeField]
     private TargetType targetType;  //自身のターゲットの種類(enum)
     [SerializeField]
+    private TargetMoveType targetMoveType;
+    [SerializeField]
     private Rigidbody thisRigidbody;//自身のrigidBody
     [SerializeField]
-    PlaySceneManager SceneManager;
-    private float speed = 0;        //オブジェクトの移動スピード
+    private Renderer renderer;
 
     private bool isMove = true;     //移動しているか否か
 
@@ -21,16 +22,18 @@ public class TargetObject : MonoBehaviour {
         OverArm = 1,
         Composite = 2
     }
-
+    private enum TargetMoveType
+    {
+        Nomal,
+        OutsideArea
+    }
 
 
     ////////////////////////////////////////////////////////////////////////////////////
-    void Start()
-    {
-        speed = PlaySceneManager.SceneManager.GetSpeed();
-    }
+
     void Update () {
         TargetMove();
+        CompositeEvent();
     }
 
     /// <summary>
@@ -39,7 +42,22 @@ public class TargetObject : MonoBehaviour {
     void TargetMove()
     {
         if (!isMove) return;
-        transform.position += transform.forward * speed;
+        transform.position += transform.forward * PlaySceneManager.SceneManager.GetSpeed();
+    }
+
+    void CompositeEvent()
+    {
+        switch (targetType)
+        {
+            case TargetType.Composite:
+                if (!CompositeAreaCheck()) return;
+                CompositeModeChange(true);
+                break;
+            default:
+                if (!PlaySceneManager.SceneManager.GetSetCompositeMode) return;
+                ColorChange();
+                break;
+        }
     }
 
     /// <summary>
@@ -71,6 +89,7 @@ public class TargetObject : MonoBehaviour {
     {
         isMove = false;
         EffectSpawn();
+        if (targetType == TargetType.Composite) CompositeModeChange(false);
         Destroy(gameObject);
     }
 
@@ -90,6 +109,25 @@ public class TargetObject : MonoBehaviour {
         const string m_playerTag = "Player";
         if (col.tag != m_playerTag) return;
         PlayerAttackEvent();
+    }
+
+    bool CompositeAreaCheck()
+    {
+        const float m_range = 15;
+        return m_range <= transform.position.z;
+    }
+
+    void CompositeModeChange(bool value)
+    {
+        PlaySceneManager.SceneManager.GetSetCompositeMode = value;
+    }
+
+    void ColorChange()
+    {
+        
+        Color m_color = new Color(60f/360f,60f/360f,60f/360f);
+        const string m_baseColorName = "_BaseColor";
+        renderer.material.SetColor(m_baseColorName, m_color);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////
