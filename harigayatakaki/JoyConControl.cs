@@ -47,7 +47,7 @@ public class JoyConControl : MonoBehaviour
         NpadId[] npadIds = { NpadId.Handheld, NpadId.No1 };
         Npad.SetSupportedIdType(npadIds);
     }
-
+   
     void Update()
     {
         stringBuilder.Length = 0;
@@ -61,7 +61,7 @@ public class JoyConControl : MonoBehaviour
                 JoyConShake(i);
                 SetAnalogStick(i);
                 ControllerStance(i);
-                JoyConAcceleration[i] =test(i);
+                JoyConAcceleration[i] = Float3toVector3(state.acceleration);
                 stringBuilder.AppendFormat(
                 "{0}[{1}]:\nShakeCheck({2})\nAnalogStick({3})\nVector3\n(X:{4})\n(Y:{5})\n(Z:{6})\nJoyConAcceleration\n(X:{7})\n(Y:{8})\n(Z:{9})",
                 npadStyle.ToString(), i + 1, ShakeCheck[i], AnalogStick[i],
@@ -91,17 +91,6 @@ public class JoyConControl : MonoBehaviour
     {
         return new Vector3
             (Float3.x, Float3.y, Float3.z);
-    }
-    private Vector3 test(int i)
-    {
-        Quaternion asd = quaternion * Quaternion.Euler(90f, 0f, 0f);
-        Vector3 vector3 = asd * new Vector3(0, 0, -1);
-        return vector3;
-    }
-    private Vector3 Float3toVector3_(nn.util.Float3 Float3)
-    {
-        return new Vector3
-            (Float3.x - 0.5f, Float3.y - 0.5f, Float3.z - 0.5f);
     }
     private void ControllerStance(int i)
     {
@@ -276,7 +265,7 @@ public class JoyConControl : MonoBehaviour
             case Hand.Left:
                 return JoyConAcceleration[0];
             case Hand.Right:
-                return JoyConAcceleration[1] + m_rightHandAcc;
+                return JoyConAcceleration[1] ;
         }
         return Vector3.zero;
     }
