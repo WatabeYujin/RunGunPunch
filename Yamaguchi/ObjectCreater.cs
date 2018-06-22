@@ -15,15 +15,18 @@ public class ObjectCreater : EditorWindow {
     private int numZ = 1;                                           // Z軸に生成するオブジェクトの数
     private float intervalZ = 1;                                    // Z軸に生成するオブジェクトの間隔
 
-    private int row = 3;                                            // 障害物の行
-    private int column = 2;                                         // 障害物の列
+    private const int row = 3;                                      // 障害物の行
+    private const int column = 2;                                   // 障害物の列
     private Vector3 pos;                                            // 障害物の行と列の情報を格納
 
     private string outputFileName;                                  // 出力するファイルの名前
-    private string dirPath = "Assets/Obstacle/";                    // 出力するディレクトリのパス
+    private const string dirPath = "Assets/Obstacle/";              // 出力するディレクトリのパス
     private const int range = 3;                                    // 障害物の全体の範囲
 
-    string s = "dsaffffffffffff\ndfasfafsfasfaf\n";
+    private const string pbDirPath = "Assets/Prefabs/";             // 障害物に使うプレファブのディレクトリ
+
+
+    string s = "parent : 生成するオブジェクトの親になるオブジェクト\n\nnum : 生成するオブジェクトの個数\n\ninterval : 生成するオブジェクトの間隔\n\nPrefabName : 保存するプレファブの名前\n";
 /// ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -81,7 +84,6 @@ public class ObjectCreater : EditorWindow {
                 if (GUILayout.Button("Save")) {
                     
                     SavePrefab();       //障害物を保存
-
                 }
 
             }
@@ -146,7 +148,7 @@ public class ObjectCreater : EditorWindow {
             
 
             pos.z += intervalZ;                                                                     // ポジションZをintervalZの数値だけ間隔をあける
-            //pos.y -= z * 0.5f;
+            //pos.y -= i * 0.5f;
         } 
         
     }
@@ -157,8 +159,7 @@ public class ObjectCreater : EditorWindow {
     private void SavePrefab()
     {
         if (!Directory.Exists(dirPath))
-        {
-            
+        {  
             Directory.CreateDirectory(dirPath);                            //prefab保存用のフォルダがなければ作成する
         }
 
