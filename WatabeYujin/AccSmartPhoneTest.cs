@@ -78,10 +78,6 @@ public class AccSmartPhoneTest : MonoBehaviour {
                 roboCon.Attack(0, RobotControl.Lane.Left);
             }
         }
-        else
-        {
-            
-        }
     }
     public void MaxReset()
     {
