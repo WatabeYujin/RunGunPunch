@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEditor;
 
 public class TargetObject : MonoBehaviour {
     [SerializeField]
@@ -11,9 +12,11 @@ public class TargetObject : MonoBehaviour {
     public TargetMoveType targetMoveType;
     [SerializeField]
     public Renderer renderer;
-
-    public int bossCommand1Player;
-    public int bossCommand2Player;
+	[SerializeField]
+	public int scorePoint = 1;
+    
+    public int compositeCommand1Player=0;//左=1,縦=2,右=3
+    public int compositeCommand2Player=0;
 
     private bool isMove = true;     //移動しているか否か
 
@@ -28,11 +31,9 @@ public class TargetObject : MonoBehaviour {
         Nomal,
         OutsideArea
     }
-
-
     ////////////////////////////////////////////////////////////////////////////////////
 
-    void Update () {
+        void Update () {
         TargetMove();
         CompositeEvent();
     }
@@ -53,6 +54,7 @@ public class TargetObject : MonoBehaviour {
             case TargetType.Composite:
                 if (!CompositeAreaCheck()) return;
                 CompositeModeChange(true);
+				
                 break;
             default:
                 if (!PlaySceneManager.SceneManager.GetSetCompositeMode) return;
@@ -66,6 +68,7 @@ public class TargetObject : MonoBehaviour {
     /// </summary>
     void TargetBreak()
     {
+		PlaySceneManager.SceneManager.ScoreUP (scorePoint);
         //バフ系の処理をここに入れる//
 
 
@@ -76,6 +79,7 @@ public class TargetObject : MonoBehaviour {
 
     void PlayerAttackEvent()
     {
+		PlaySceneManager.SceneManager.ComboStop ();
         //デバフ系の処理をここに入れる//
 
 
@@ -154,4 +158,22 @@ public class TargetObject : MonoBehaviour {
         else return false;
     }
 
+	public void CompositeDamage(int attackPlayerID,int lane)
+	{
+        Debug.Log(attackPlayerID);
+		if (attackPlayerID == 0)
+		{
+			if (compositeCommand1Player == 0) return;
+			if (compositeCommand1Player % 10 != lane) return;
+			compositeCommand1Player /= 10;
+		}
+		else if (attackPlayerID == 1)
+		{
+			if (compositeCommand2Player == 0) return;
+			if (compositeCommand2Player % 10 != lane) return;
+			compositeCommand2Player /= 10;
+		}
+        if (compositeCommand1Player != 0 || compositeCommand2Player != 0) return;
+        TargetBreak();
+	}
 }

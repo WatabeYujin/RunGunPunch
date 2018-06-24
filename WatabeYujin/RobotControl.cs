@@ -25,9 +25,9 @@ public class RobotControl : MonoBehaviour
 
     public enum Lane                            //攻撃レーンの位置
     {
-        Center = 0,
         Left = 1,
-        Right = 2
+        Center = 2,
+        Right = 3
     }
 
     ///////////////////////////////////////////////////////////////////////////////////
@@ -36,6 +36,21 @@ public class RobotControl : MonoBehaviour
         
     }
 
+	void Update(){
+		if(Input.GetKeyDown(KeyCode.A))
+			Attack (0, Lane.Left);
+        if (Input.GetKeyDown(KeyCode.S))
+			Attack (0, Lane.Center);
+        if (Input.GetKeyDown(KeyCode.D))
+			Attack (0, Lane.Right);
+        if (Input.GetKeyDown(KeyCode.LeftArrow))
+			Attack (1, Lane.Left);
+        if (Input.GetKeyDown(KeyCode.DownArrow))
+			Attack (1, Lane.Center);
+        if (Input.GetKeyDown(KeyCode.RightArrow))
+			Attack (1, Lane.Right);
+	}
+
     /// <summary>
     /// プレイヤーの攻撃の処理を行う
     /// </summary>
@@ -43,9 +58,12 @@ public class RobotControl : MonoBehaviour
     /// <param name="attackLane">攻撃するレーンの位置(enum)</param>
     public void Attack(int playerID, Lane attackLane)
     {
+        if (PlaySceneManager.SceneManager.GetSetCompositeMode) {
+            CompositeAttack(playerID, attackLane);
+            return;
+        }
         GameObject m_hitTargetObject = null;
         Transform m_shotTransform = null;
-
         if (attackLane == Lane.Center)
             m_shotTransform = centerShotTransform[playerID];
         if (attackLane == Lane.Right)
@@ -66,6 +84,21 @@ public class RobotControl : MonoBehaviour
             RayView(lineMaterials[playerID], m_shotTransform.position, m_endPosition);
         }
     }
+
+	void CompositeAttack(int playerID, Lane attackLane){
+		Transform m_shotTransform = centerShotTransform[playerID];
+		GameObject m_hitTargetObject = AttackRayCast(m_shotTransform);                     //Rayによる命中判定を行う
+		if (m_hitTargetObject != null)
+		{
+			m_hitTargetObject.GetComponent<TargetObject>().CompositeDamage(playerID,(int)attackLane);
+			RayView(lineMaterials[playerID], m_shotTransform.position, m_hitTargetObject.transform.position);
+		}
+		else
+		{
+			Vector3 m_endPosition = m_shotTransform.position + (m_shotTransform.transform.forward * attackDistance);
+			RayView(lineMaterials[playerID], m_shotTransform.position, m_endPosition);
+		}
+	}
 
     /// <summary>
     /// 上に乗ってるパイロットたちを動かす処理
