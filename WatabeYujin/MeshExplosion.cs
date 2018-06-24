@@ -37,6 +37,7 @@ public class MeshExplosion : MonoBehaviour {
         int m_objcount = triangles.Length / 3;
         m_objcount = m_objcount / maxTriangles;
         m_objcount = Mathf.Clamp(m_objcount, 1, maxTriangles);
+        m_objcount = 1;
         Debug.Log("m_objcount"+m_objcount);
         //for (int i = 0; i < triangles.Length; i += 3)
         for (int i = 0; i < triangles.Length; i += 3 * m_objcount)
@@ -47,6 +48,7 @@ public class MeshExplosion : MonoBehaviour {
             float extrudeSize = ((s.x + s.y + s.z) / 3) * 0.3f;
             List<Vector3> m_verticesList = new List<Vector3>();
             List<Vector2> m_uvList = new List<Vector2>();
+            //for (int j = 0; j < 3 * m_objcount; j++)
             for (int j = 0; j < 3 * m_objcount; j++)
             {
                 if (vertices[triangles[i + j]] == null) continue;
@@ -109,19 +111,42 @@ public class MeshExplosion : MonoBehaviour {
             triangles[i + 4] = i + 4;
             triangles[i + 5] = i + 3;
         }
-        for (int i = 0; i < uvs.Length-uvList.Count; i += uvList.Count)
+        // orig face
+        uvs[0] = uvList[0];
+        uvs[1] = uvList[1];
+        uvs[2] = uvList[2]; // todo
+                      // right face
+        uvs[3] = uvList[0];
+        uvs[4] = uvList[1];
+        uvs[5] = uvList[2]; // todo
+
+        // left face
+        uvs[6] = uvList[0];
+        uvs[7] = uvList[1];
+        uvs[8] = uvList[2];   // todo
+                        // bottom face (mirror?) or custom color? or fixed from uv?
+        uvs[9] = uvList[0];
+        uvs[10] = uvList[1];
+        uvs[11] = uvList[2]; // todo
+        /*
+        for (int i = 0; i < m_combineCount * uvList.Count; i += uvList.Count)
         {
+            uvs[i] = uvList[0];
+            uvs[i+1] = uvList[1];
+            uvs[i+2] = uvList[2];
+            
             for(int j = 0; j < uvList.Count; j++)
             {
                 uvs[i+j] = uvList[j];
             }
         }
+        */
         mesh.vertices = vertices;
         mesh.uv = uvs;
 		mesh.triangles = triangles;
         mesh.RecalculateBounds();
         mesh.RecalculateNormals();
-
+        CalculateMeshTangents(mesh);
         MeshCollider mc = go.AddComponent<MeshCollider>();
 
         mc.sharedMesh = mesh;
@@ -129,6 +154,75 @@ public class MeshExplosion : MonoBehaviour {
         return go.AddComponent<Rigidbody>();
 
         //go.AddComponent<MeshFader>();
+    }
+    void CalculateMeshTangents(Mesh mesh)
+    {
+        //speed up math by copying the mesh arrays
+        int[] triangles = mesh.triangles;
+        Vector3[] vertices = mesh.vertices;
+        Vector2[] uv = mesh.uv;
+        Vector3[] normals = mesh.normals;
+
+        //variable definitions
+        int triangleCount = triangles.Length;
+        int vertexCount = vertices.Length;
+
+        Vector3[] tan1 = new Vector3[vertexCount];
+        Vector3[] tan2 = new Vector3[vertexCount];
+
+        Vector4[] tangents = new Vector4[vertexCount];
+
+        for (long a = 0; a < triangleCount; a += 3)
+        {
+            long i1 = triangles[a + 0];
+            long i2 = triangles[a + 1];
+            long i3 = triangles[a + 2];
+
+            Vector3 v1 = vertices[i1];
+            Vector3 v2 = vertices[i2];
+            Vector3 v3 = vertices[i3];
+
+            Vector2 w1 = uv[i1];
+            Vector2 w2 = uv[i2];
+            Vector2 w3 = uv[i3];
+
+            float x1 = v2.x - v1.x;
+            float x2 = v3.x - v1.x;
+            float y1 = v2.y - v1.y;
+            float y2 = v3.y - v1.y;
+            float z1 = v2.z - v1.z;
+            float z2 = v3.z - v1.z;
+
+            float s1 = w2.x - w1.x;
+            float s2 = w3.x - w1.x;
+            float t1 = w2.y - w1.y;
+            float t2 = w3.y - w1.y;
+
+            float r = 1.0f / (s1 * t2 - s2 * t1);
+
+            Vector3 sdir = new Vector3((t2 * x1 - t1 * x2) * r, (t2 * y1 - t1 * y2) * r, (t2 * z1 - t1 * z2) * r);
+            Vector3 tdir = new Vector3((s1 * x2 - s2 * x1) * r, (s1 * y2 - s2 * y1) * r, (s1 * z2 - s2 * z1) * r);
+
+            tan1[i1] += sdir;
+            tan1[i2] += sdir;
+            tan1[i3] += sdir;
+
+            tan2[i1] += tdir;
+            tan2[i2] += tdir;
+            tan2[i3] += tdir;
+        }
+
+        for (int a = 0; a < vertexCount; ++a)
+        {
+            Vector3 n = normals[a];
+            Vector3 t = tan1[a];
+            Vector3.OrthoNormalize(ref n, ref t);
+            tangents[a].x = t.x;
+            tangents[a].y = t.y;
+            tangents[a].z = t.z;
+            tangents[a].w = (Vector3.Dot(Vector3.Cross(n, t), tan2[a]) < 0.0f) ? -1.0f : 1.0f;
+        }
+        mesh.tangents = tangents;
     }
 
     private List<int[]> CombineSet(int listLength,int combineCount)
