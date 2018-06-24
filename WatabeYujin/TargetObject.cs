@@ -15,8 +15,8 @@ public class TargetObject : MonoBehaviour {
 	[SerializeField]
 	public int scorePoint = 1;
     
-    public int compositeCommand1Player=0;//左=1,縦=2,右=3
-    public int compositeCommand2Player=0;
+    public int compositeCommand1Player=0;//ボス用のコマンド入力
+    public int compositeCommand2Player=0;//左=1,縦=2,右=3　（例）左左右縦の場合1132
 
     private bool isMove = true;     //移動しているか否か
 
@@ -33,7 +33,7 @@ public class TargetObject : MonoBehaviour {
     }
     ////////////////////////////////////////////////////////////////////////////////////
 
-        void Update () {
+    void Update () {
         TargetMove();
         CompositeEvent();
     }
@@ -47,6 +47,9 @@ public class TargetObject : MonoBehaviour {
         transform.position += transform.forward * PlaySceneManager.SceneManager.GetSpeed();
     }
 
+    /// <summary>
+    /// 協力ターゲットが居る場合の処理
+    /// </summary>
     void CompositeEvent()
     {
         switch (targetType)
@@ -57,8 +60,7 @@ public class TargetObject : MonoBehaviour {
 				
                 break;
             default:
-                if (!PlaySceneManager.SceneManager.GetSetCompositeMode) return;
-                ColorChange();
+                ColorChange(PlaySceneManager.SceneManager.GetSetCompositeMode);
                 break;
         }
     }
@@ -127,11 +129,16 @@ public class TargetObject : MonoBehaviour {
         PlaySceneManager.SceneManager.GetSetCompositeMode = value;
     }
 
-    void ColorChange()
+    /// <summary>
+    /// 協力ターゲットが存在する場合、色を変える処理
+    /// </summary>
+    /// <param name="isCombineMode">協力ターゲットが出現しているか</param>
+    void ColorChange(bool isCombineMode)
     {   
         Color m_color = new Color(60f/360f,60f/360f,60f/360f);
         const string m_baseColorName = "_BaseColor";
-        renderer.material.SetColor(m_baseColorName, m_color);
+        if(isCombineMode) renderer.material.SetColor(m_baseColorName, m_color);
+        else renderer.material.SetColor(m_baseColorName, Color.white);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////
@@ -158,6 +165,11 @@ public class TargetObject : MonoBehaviour {
         else return false;
     }
 
+    /// <summary>
+    /// 協力ターゲット用のダメージ処理
+    /// </summary>
+    /// <param name="attackPlayerID">攻撃したプレイヤーのID</param>
+    /// <param name="lane">攻撃したレーン</param>
 	public void CompositeDamage(int attackPlayerID,int lane)
 	{
         Debug.Log(attackPlayerID);

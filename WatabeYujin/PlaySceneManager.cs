@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PlaySceneManager : MonoBehaviour {
 
@@ -12,10 +13,15 @@ public class PlaySceneManager : MonoBehaviour {
     private Light directionalLight;
     [SerializeField]
     private Color compositeModeLightColor;
+	[SerializeField]
+	private Text scoreText;
+	[SerializeField]
+	private Text comboText;
 
     static public PlaySceneManager SceneManager;
     private Color baseColor;
-    
+	private int score;
+	private int combo;
 
     void Awake()
     {
@@ -23,6 +29,19 @@ public class PlaySceneManager : MonoBehaviour {
         Application.targetFrameRate = 60;           //目標FPSを60に設定
         baseColor = directionalLight.color;
     }
+	void Update(){
+		ScoreView ();
+		ComboView ();
+	}
+
+	void ScoreView(){
+		scoreText.text = "Score："+score;
+	}
+	void ComboView(){
+		if (combo <= 1) return;
+		comboText.text = comboText + "Combo!!";
+	}
+
     public float GetSpeed()
     {
         return speed / 10;
@@ -44,4 +63,13 @@ public class PlaySceneManager : MonoBehaviour {
         if (isComposite) directionalLight.color = compositeModeLightColor;
         else directionalLight.color = baseColor;
     }
+
+	public void ScoreUP(int getScore){
+		combo++;
+		score += getScore;
+	}
+
+	public void ComboStop(){
+		combo = 0;
+	}
 }
