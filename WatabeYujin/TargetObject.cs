@@ -200,6 +200,8 @@ public class TargetObject : MonoBehaviour {
     /// </summary>
     private void SlopeAdjust()
     {
+        if (!isMove) return;
+
         //Sampleを中心に自分を現在の上方向に、毎秒angle分だけ回転する。
         Vector3 m_axis = transform.TransformDirection(Vector3.right);
         transform.RotateAround(stagePos, m_axis, angle * PlaySceneManager.SceneManager.GetSpeed());
@@ -220,4 +222,6 @@ public class TargetObject : MonoBehaviour {
             transform.rotation *= m_q;
         }
     }
+
+
 }
