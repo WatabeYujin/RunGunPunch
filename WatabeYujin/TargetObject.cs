@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEditor;
 
 public class TargetObject : MonoBehaviour {
     [SerializeField]
@@ -14,11 +13,17 @@ public class TargetObject : MonoBehaviour {
     public Renderer renderer;
 	[SerializeField]
 	public int scorePoint = 1;
-    
-    public int compositeCommand1Player=0;//ボス用のコマンド入力
-    public int compositeCommand2Player=0;//左=1,縦=2,右=3　（例）左左右縦の場合1132
+
+	public int compositeCommand1Player; //左=0,縦=1,右=2
+	public int compositeCommand2Player; 
 
     private bool isMove = true;     //移動しているか否か
+
+    public float angle = 5f; //一秒当たりの回転角度
+
+    private Vector3 stagePos; //回転の中心をとるために使う変数
+
+    private RaycastHit hit;
 
     public enum TargetType         //ターゲットの種類
     {
@@ -31,11 +36,28 @@ public class TargetObject : MonoBehaviour {
         Nomal,
         OutsideArea
     }
+
+
     ////////////////////////////////////////////////////////////////////////////////////
 
+    void Start()
+    {
+        //targetに、"Sample"の名前のオブジェクトのコンポーネントを見つけてアクセスする
+        Transform m_stage = GameObject.Find("Sphere").transform;
+        //変数targetPosにSampleの位置情報を取得
+        stagePos = m_stage.position;
+
+        //自分の向きをターゲットの正面に向ける
+        transform.LookAt(m_stage);
+
+        //自分をZ軸を中心に0～360でランダムに回転させる
+        //transform.Rotate(new Vector3(0, 0, Random.Range(0, 360)), Space.World);
+    }
+
     void Update () {
-        TargetMove();
+        //TargetMove();
         CompositeEvent();
+        SlopeAdjust();
     }
 
     /// <summary>
@@ -47,9 +69,6 @@ public class TargetObject : MonoBehaviour {
         transform.position += transform.forward * PlaySceneManager.SceneManager.GetSpeed();
     }
 
-    /// <summary>
-    /// 協力ターゲットが居る場合の処理
-    /// </summary>
     void CompositeEvent()
     {
         switch (targetType)
@@ -57,10 +76,10 @@ public class TargetObject : MonoBehaviour {
             case TargetType.Composite:
                 if (!CompositeAreaCheck()) return;
                 CompositeModeChange(true);
-				
                 break;
             default:
-                ColorChange(PlaySceneManager.SceneManager.GetSetCompositeMode);
+                if (!PlaySceneManager.SceneManager.GetSetCompositeMode) return;
+                ColorChange();
                 break;
         }
     }
@@ -129,16 +148,11 @@ public class TargetObject : MonoBehaviour {
         PlaySceneManager.SceneManager.GetSetCompositeMode = value;
     }
 
-    /// <summary>
-    /// 協力ターゲットが存在する場合、色を変える処理
-    /// </summary>
-    /// <param name="isCombineMode">協力ターゲットが出現しているか</param>
-    void ColorChange(bool isCombineMode)
+    void ColorChange()
     {   
         Color m_color = new Color(60f/360f,60f/360f,60f/360f);
         const string m_baseColorName = "_BaseColor";
-        if(isCombineMode) renderer.material.SetColor(m_baseColorName, m_color);
-        else renderer.material.SetColor(m_baseColorName, Color.white);
+        renderer.material.SetColor(m_baseColorName, m_color);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////
@@ -165,14 +179,8 @@ public class TargetObject : MonoBehaviour {
         else return false;
     }
 
-    /// <summary>
-    /// 協力ターゲット用のダメージ処理
-    /// </summary>
-    /// <param name="attackPlayerID">攻撃したプレイヤーのID</param>
-    /// <param name="lane">攻撃したレーン</param>
 	public void CompositeDamage(int attackPlayerID,int lane)
 	{
-        Debug.Log(attackPlayerID);
 		if (attackPlayerID == 0)
 		{
 			if (compositeCommand1Player == 0) return;
@@ -185,7 +193,31 @@ public class TargetObject : MonoBehaviour {
 			if (compositeCommand2Player % 10 != lane) return;
 			compositeCommand2Player /= 10;
 		}
-        if (compositeCommand1Player != 0 || compositeCommand2Player != 0) return;
-        TargetBreak();
 	}
+
+    /// <summary>
+    /// オブジェクトの角度を調節する
+    /// </summary>
+    private void SlopeAdjust()
+    {
+        //Sampleを中心に自分を現在の上方向に、毎秒angle分だけ回転する。
+        Vector3 m_axis = transform.TransformDirection(Vector3.right);
+        transform.RotateAround(stagePos, m_axis, angle * PlaySceneManager.SceneManager.GetSpeed());
+
+        // Transformの真下の地形の法線を調べる
+        if (Physics.Raycast(
+                    transform.position,
+                    -transform.up,
+                    out hit,
+                    float.PositiveInfinity))
+        {
+            // 傾きの差を求める
+            Quaternion m_q = Quaternion.FromToRotation(
+                        transform.up,
+                        hit.normal);
+
+            // 自分を回転させる
+            transform.rotation *= m_q;
+        }
+    }
 }
