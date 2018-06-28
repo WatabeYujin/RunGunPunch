@@ -1,4 +1,4 @@
-ï»¿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -6,24 +6,24 @@ public class RobotControl : MonoBehaviour
 {
     [SerializeField]
     private Transform[] centerShotTransform =
-        new Transform[2];                       //ä¸­å¤®ã®æ”»æ’ƒåˆ¤å®šã®ä½ç½®ï¼ˆé…åˆ—0ï¼1P,é…åˆ—1ï¼2Pï¼‰
+        new Transform[2];                       //’†‰›‚ÌUŒ‚”»’è‚ÌˆÊ’ui”z—ñ01P,”z—ñ12Pj
     [SerializeField]
     private Transform[] rightShotTransform =
-        new Transform[2];                       //å³ã®æ”»æ’ƒåˆ¤å®šã®ä½ç½®ï¼ˆé…åˆ—0ï¼1P,é…åˆ—1ï¼2Pï¼‰
+        new Transform[2];                       //‰E‚ÌUŒ‚”»’è‚ÌˆÊ’ui”z—ñ01P,”z—ñ12Pj
     [SerializeField]
     private Transform[] leftShotTransform =
-        new Transform[2];                       //å·¦ã®æ”»æ’ƒåˆ¤å®šã®ä½ç½®ï¼ˆé…åˆ—0ï¼1P,é…åˆ—1ï¼2Pï¼‰
+        new Transform[2];                       //¶‚ÌUŒ‚”»’è‚ÌˆÊ’ui”z—ñ01P,”z—ñ12Pj
     [SerializeField]
-    private LineRenderer lineRenderer;          //æ”»æ’ƒæ™‚ã«è¡¨ç¤ºã™ã‚‹ãƒ©ã‚¤ãƒ³ã®LineRenderer
+    private LineRenderer lineRenderer;          //UŒ‚‚É•\¦‚·‚éƒ‰ƒCƒ“‚ÌLineRenderer
     [SerializeField]
-    private Material[] lineMaterials=
-        new Material[2];                        //æ”»æ’ƒæ™‚è¡¨ç¤ºã™ã‚‹LineRendererã®Material
+    private Material[] lineMaterials =
+        new Material[2];                        //UŒ‚•\¦‚·‚éLineRenderer‚ÌMaterial
     [SerializeField]
-    private float attackDistance = 15;          //æœ€å¤§å°„ç¨‹
+    private float attackDistance = 15;          //Å‘åË’ö
 
     IEnumerator lineDeleteIEnumerator;
 
-    public enum Lane                            //æ”»æ’ƒãƒ¬ãƒ¼ãƒ³ã®ä½ç½®
+    public enum Lane                            //UŒ‚ƒŒ[ƒ“‚ÌˆÊ’u
     {
         Left = 1,
         Center = 2,
@@ -31,21 +31,24 @@ public class RobotControl : MonoBehaviour
     }
 
     ///////////////////////////////////////////////////////////////////////////////////
-    void Start() {
+
+    void Start()
+    {
         lineDeleteIEnumerator = LineRendererDelete();
-        
     }
 
-	void Update(){
+    void Update()
+    {
         PcJoyConControl();
     }
 
     /// <summary>
-    /// PCã§ã®JoyConã‚’æŒ¯ã‚‹å…¥åŠ›ã‚’è¡Œã†ã€‚
-    /// 1Pï¼šA=å·¦æŒ¯ã‚Š , S=ç¸¦æŒ¯ã‚Š , D=å³æŒ¯ã‚Š
-    /// 2Pï¼šæ–¹å‘ã‚­ãƒ¼â†=å·¦æŒ¯ã‚Š , æ–¹å‘ã‚­ãƒ¼â†“=ç¸¦æŒ¯ã‚Š , æ–¹å‘ã‚­ãƒ¼â†’=å³æŒ¯ã‚Š
+    /// PC‚Å‚ÌJoyCon‚ğU‚é“ü—Í‚ğs‚¤B
+    /// 1PFA=¶U‚è , S=cU‚è , D=‰EU‚è
+    /// 2PF•ûŒüƒL[©=¶U‚è , •ûŒüƒL[«=cU‚è , •ûŒüƒL[¨=‰EU‚è
     /// </summary>
-    void PcJoyConControl() {
+    void PcJoyConControl()
+    {
         if (Input.GetKeyDown(KeyCode.A))
             Attack(0, Lane.Left);
         if (Input.GetKeyDown(KeyCode.S))
@@ -61,14 +64,14 @@ public class RobotControl : MonoBehaviour
     }
 
     /// <summary>
-    /// è¨­å®šã—ãŸæ”»æ’ƒåˆ¤å®šã®å ´æ‰€ã‹ã‚‰Rayã‚’é£›ã°ã—ã¦å‘½ä¸­åˆ¤å®šã‚’è¡Œã†
+    /// İ’è‚µ‚½UŒ‚”»’è‚ÌêŠ‚©‚çRay‚ğ”ò‚Î‚µ‚Ä–½’†”»’è‚ğs‚¤
     /// </summary>
-    /// <param name="shotTransform">Rayã‚’é£›ã°ã™Transform</param>
-    /// <returns><para>å‘½ä¸­ã—ãŸTargetã‚¿ã‚°ã®GameObject</para><para>ï¼ˆå‘½ä¸­ã—ãªã‹ã£ãŸã€ã‚ã‚‹ã„ã¯åˆ¥ã®ã‚¿ã‚°ã ã£ãŸå ´åˆnullã‚’è¿”ã™ï¼‰</para></returns>
+    /// <param name="shotTransform">Ray‚ğ”ò‚Î‚·Transform</param>
+    /// <returns><para>–½’†‚µ‚½Targetƒ^ƒO‚ÌGameObject</para><para>i–½’†‚µ‚È‚©‚Á‚½A‚ ‚é‚¢‚Í•Ê‚Ìƒ^ƒO‚¾‚Á‚½ê‡null‚ğ•Ô‚·j</para></returns>
     private GameObject AttackRayCast(Transform shotTransform)
     {
         Ray m_attackRay = new Ray(shotTransform.position, shotTransform.forward);
-        RaycastHit m_hit;                                 //ãƒ¬ã‚¤ã®è·é›¢
+        RaycastHit m_hit;                                 //ƒŒƒC‚Ì‹——£
         const string m_targetTagName = "Target";
         if (!Physics.Raycast(m_attackRay, out m_hit, attackDistance))
             return null;
@@ -78,14 +81,14 @@ public class RobotControl : MonoBehaviour
     }
 
     /// <summary>
-    /// å”åŠ›ã‚¿ãƒ¼ã‚²ãƒƒãƒˆå­˜åœ¨æ™‚ã®æ”»æ’ƒå‡¦ç†
+    /// ‹¦—Íƒ^[ƒQƒbƒg‘¶İ‚ÌUŒ‚ˆ—
     /// </summary>
-    /// <param name="playerID">ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®ID</param>
-    /// <param name="attackLane">æ”»æ’ƒã™ã‚‹ãƒ¬ãƒ¼ãƒ³ã®ä½ç½®(enum)</param>
+    /// <param name="playerID">ƒvƒŒƒCƒ„[‚ÌID</param>
+    /// <param name="attackLane">UŒ‚‚·‚éƒŒ[ƒ“‚ÌˆÊ’u(enum)</param>
     void CompositeAttack(int playerID, Lane attackLane)
     {
         Transform m_shotTransform = centerShotTransform[playerID];
-        GameObject m_hitTargetObject = AttackRayCast(m_shotTransform);                     //Rayã«ã‚ˆã‚‹å‘½ä¸­åˆ¤å®šã‚’è¡Œã†
+        GameObject m_hitTargetObject = AttackRayCast(m_shotTransform);                     //Ray‚É‚æ‚é–½’†”»’è‚ğs‚¤        
         if (m_hitTargetObject != null)
         {
             m_hitTargetObject.GetComponent<TargetObject>().CompositeDamage(playerID, (int)attackLane);
@@ -118,13 +121,18 @@ public class RobotControl : MonoBehaviour
     ///////////////////////////////////////////////////////////////////////////////////
 
     /// <summary>
-    /// ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®æ”»æ’ƒã®å‡¦ç†ã‚’è¡Œã†
+    /// ƒvƒŒƒCƒ„[‚ÌUŒ‚‚Ìˆ—‚ğs‚¤
     /// </summary>
-    /// <param name="playerID">ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®ID</param>
-    /// <param name="attackLane">æ”»æ’ƒã™ã‚‹ãƒ¬ãƒ¼ãƒ³ã®ä½ç½®(enum)</param>
+    /// <param name="playerID">ƒvƒŒƒCƒ„[‚ÌID</param>
+    /// <param name="attackLane">UŒ‚‚·‚éƒŒ[ƒ“‚ÌˆÊ’u(enum)</param>
     public void Attack(int playerID, Lane attackLane)
     {
-        if (PlaySceneManager.SceneManager.GetSetCompositeMode) {
+        if (PlaySceneManager.SceneManager.GetSetNowCondition ==
+            PlaySceneManager.Condition.Reverse)
+            playerID = playerID == 0 ? 1 : 0;
+        if (PlaySceneManager.SceneManager.GetSetNowCondition ==
+            PlaySceneManager.Condition.Composite)
+        {
             CompositeAttack(playerID, attackLane);
             return;
         }
@@ -137,7 +145,7 @@ public class RobotControl : MonoBehaviour
         if (attackLane == Lane.Left)
             m_shotTransform = leftShotTransform[playerID];
 
-        m_hitTargetObject = AttackRayCast(m_shotTransform);                     //Rayã«ã‚ˆã‚‹å‘½ä¸­åˆ¤å®šã‚’è¡Œã†
+        m_hitTargetObject = AttackRayCast(m_shotTransform);                     //Ray‚É‚æ‚é–½’†”»’è‚ğs‚¤
 
         if (m_hitTargetObject != null)
         {
@@ -152,10 +160,10 @@ public class RobotControl : MonoBehaviour
     }
 
     /// <summary>
-    /// ä¸Šã«ä¹—ã£ã¦ã‚‹ãƒ‘ã‚¤ãƒ­ãƒƒãƒˆãŸã¡ã‚’å‹•ã‹ã™å‡¦ç†
+    /// ã‚Éæ‚Á‚Ä‚éƒpƒCƒƒbƒg‚½‚¿‚ğ“®‚©‚·ˆ—
     /// </summary>
-    /// <param name="playerID">ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®id</param>
-    /// <param name="axis">ã‚¹ãƒ†ã‚£ãƒƒã‚¯ã®å…¥åŠ›</param>
+    /// <param name="playerID">ƒvƒŒƒCƒ„[‚Ìid</param>
+    /// <param name="axis">ƒXƒeƒBƒbƒN‚Ì“ü—Í</param>
     public void Pilot(int playerID, Vector2 axis)
     {
 

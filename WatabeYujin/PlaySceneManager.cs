@@ -8,8 +8,6 @@ public class PlaySceneManager : MonoBehaviour {
     [SerializeField]
     private float speed = 1;
     [SerializeField]
-    private bool isCompositeMode = false;
-    [SerializeField]
     private Light directionalLight;
     [SerializeField]
     private Color compositeModeLightColor;
@@ -17,11 +15,21 @@ public class PlaySceneManager : MonoBehaviour {
 	private Text scoreText;
 	[SerializeField]
 	private Text comboText;
+    [SerializeField]
+    private Condition condition;
 
     static public PlaySceneManager SceneManager;
     private Color baseColor;
 	private int score;
 	private int combo;
+    
+
+    public enum Condition
+    {
+        None,
+        Reverse,
+        Composite
+    }
 
     void Awake()
     {
@@ -46,21 +54,21 @@ public class PlaySceneManager : MonoBehaviour {
     {
         return speed / 10;
     }
-    public bool GetSetCompositeMode
+    public Condition GetSetNowCondition
     {
         get{
-            return isCompositeMode;
+            return condition;
         }
         set{
-            if (isCompositeMode == value) return;
-            isCompositeMode = value;
-            LightColorChange(value);
+            if (condition == value) return;
+            condition = value;
+            LightColorChange();
         }
     }
 
-    void LightColorChange(bool isComposite)
+    void LightColorChange()
     {
-        if (isComposite) directionalLight.color = compositeModeLightColor;
+        if (condition==Condition.Composite) directionalLight.color = compositeModeLightColor;
         else directionalLight.color = baseColor;
     }
 
