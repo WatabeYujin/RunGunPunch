@@ -8,13 +8,14 @@ public class MeshExplosion : MonoBehaviour {
     //オブジェクトをバラバラにして吹き飛ばすスクリプト
     [SerializeField]
     int maxTriangles = 30;
+    static public MeshExplosion meshExplosion;
+    private void Start()
+    {
+        meshExplosion = this;
+    }
 
     public void Explode(Transform target,Vector3 center,Vector3 moveVerocity)
     {
-        Debug.Log("我が名はめぐみん!");
-        Debug.Log("紅魔族随一の魔法の使い手にして、爆裂魔法を操りし者。");
-        Debug.Log("我が力、見るがいい！");
-        Debug.Log("『エクスプロージョン』！!");
 
         Vector3 m_targetScale = target.transform.localScale;
 

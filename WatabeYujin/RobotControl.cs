@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -6,24 +6,29 @@ public class RobotControl : MonoBehaviour
 {
     [SerializeField]
     private Transform[] centerShotTransform =
-        new Transform[2];                       //’†‰›‚ÌUŒ‚”»’è‚ÌˆÊ’ui”z—ñ01P,”z—ñ12Pj
+        new Transform[2];                       //ä¸­å¤®ã®æ”»æ’ƒåˆ¤å®šã®ä½ç½®ï¼ˆé…åˆ—0ï¼1P,é…åˆ—1ï¼2Pï¼‰
     [SerializeField]
     private Transform[] rightShotTransform =
-        new Transform[2];                       //‰E‚ÌUŒ‚”»’è‚ÌˆÊ’ui”z—ñ01P,”z—ñ12Pj
+        new Transform[2];                       //å³ã®æ”»æ’ƒåˆ¤å®šã®ä½ç½®ï¼ˆé…åˆ—0ï¼1P,é…åˆ—1ï¼2Pï¼‰
     [SerializeField]
     private Transform[] leftShotTransform =
-        new Transform[2];                       //¶‚ÌUŒ‚”»’è‚ÌˆÊ’ui”z—ñ01P,”z—ñ12Pj
+        new Transform[2];                       //å·¦ã®æ”»æ’ƒåˆ¤å®šã®ä½ç½®ï¼ˆé…åˆ—0ï¼1P,é…åˆ—1ï¼2Pï¼‰
     [SerializeField]
-    private LineRenderer lineRenderer;          //UŒ‚‚É•\¦‚·‚éƒ‰ƒCƒ“‚ÌLineRenderer
+    private LineRenderer lineRenderer;          //æ”»æ’ƒæ™‚ã«è¡¨ç¤ºã™ã‚‹ãƒ©ã‚¤ãƒ³ã®LineRenderer
     [SerializeField]
     private Material[] lineMaterials =
-        new Material[2];                        //UŒ‚•\¦‚·‚éLineRenderer‚ÌMaterial
+        new Material[2];                        //æ”»æ’ƒæ™‚è¡¨ç¤ºã™ã‚‹LineRendererã®Material
     [SerializeField]
-    private float attackDistance = 15;          //Å‘åË’ö
-
+    private float attackDistance = 15;          //æœ€å¤§å°„ç¨‹
+    [SerializeField]
+    private GameObject[] bulletObj = new GameObject[2];
     IEnumerator lineDeleteIEnumerator;
+    [SerializeField]
+    private AudioSource overSE;
+    [SerializeField]
+    private AudioSource energySE;
 
-    public enum Lane                            //UŒ‚ƒŒ[ƒ“‚ÌˆÊ’u
+    public enum Lane                            //æ”»æ’ƒãƒ¬ãƒ¼ãƒ³ã®ä½ç½®
     {
         Left = 1,
         Center = 2,
@@ -43,9 +48,9 @@ public class RobotControl : MonoBehaviour
     }
 
     /// <summary>
-    /// PC‚Å‚ÌJoyCon‚ğU‚é“ü—Í‚ğs‚¤B
-    /// 1PFA=¶U‚è , S=cU‚è , D=‰EU‚è
-    /// 2PF•ûŒüƒL[©=¶U‚è , •ûŒüƒL[«=cU‚è , •ûŒüƒL[¨=‰EU‚è
+    /// PCã§ã®JoyConã‚’æŒ¯ã‚‹å…¥åŠ›ã‚’è¡Œã†ã€‚
+    /// 1Pï¼šA=å·¦æŒ¯ã‚Š , S=ç¸¦æŒ¯ã‚Š , D=å³æŒ¯ã‚Š
+    /// 2Pï¼šæ–¹å‘ã‚­ãƒ¼â†=å·¦æŒ¯ã‚Š , æ–¹å‘ã‚­ãƒ¼â†“=ç¸¦æŒ¯ã‚Š , æ–¹å‘ã‚­ãƒ¼â†’=å³æŒ¯ã‚Š
     /// </summary>
     void PcJoyConControl()
     {
@@ -64,14 +69,14 @@ public class RobotControl : MonoBehaviour
     }
 
     /// <summary>
-    /// İ’è‚µ‚½UŒ‚”»’è‚ÌêŠ‚©‚çRay‚ğ”ò‚Î‚µ‚Ä–½’†”»’è‚ğs‚¤
+    /// è¨­å®šã—ãŸæ”»æ’ƒåˆ¤å®šã®å ´æ‰€ã‹ã‚‰Rayã‚’é£›ã°ã—ã¦å‘½ä¸­åˆ¤å®šã‚’è¡Œã†
     /// </summary>
-    /// <param name="shotTransform">Ray‚ğ”ò‚Î‚·Transform</param>
-    /// <returns><para>–½’†‚µ‚½Targetƒ^ƒO‚ÌGameObject</para><para>i–½’†‚µ‚È‚©‚Á‚½A‚ ‚é‚¢‚Í•Ê‚Ìƒ^ƒO‚¾‚Á‚½ê‡null‚ğ•Ô‚·j</para></returns>
+    /// <param name="shotTransform">Rayã‚’é£›ã°ã™Transform</param>
+    /// <returns><para>å‘½ä¸­ã—ãŸTargetã‚¿ã‚°ã®GameObject</para><para>ï¼ˆå‘½ä¸­ã—ãªã‹ã£ãŸã€ã‚ã‚‹ã„ã¯åˆ¥ã®ã‚¿ã‚°ã ã£ãŸå ´åˆnullã‚’è¿”ã™ï¼‰</para></returns>
     private GameObject AttackRayCast(Transform shotTransform)
     {
         Ray m_attackRay = new Ray(shotTransform.position, shotTransform.forward);
-        RaycastHit m_hit;                                 //ƒŒƒC‚Ì‹——£
+        RaycastHit m_hit;                                 //ãƒ¬ã‚¤ã®è·é›¢
         const string m_targetTagName = "Target";
         if (!Physics.Raycast(m_attackRay, out m_hit, attackDistance))
             return null;
@@ -81,14 +86,14 @@ public class RobotControl : MonoBehaviour
     }
 
     /// <summary>
-    /// ‹¦—Íƒ^[ƒQƒbƒg‘¶İ‚ÌUŒ‚ˆ—
+    /// å”åŠ›ã‚¿ãƒ¼ã‚²ãƒƒãƒˆå­˜åœ¨æ™‚ã®æ”»æ’ƒå‡¦ç†
     /// </summary>
-    /// <param name="playerID">ƒvƒŒƒCƒ„[‚ÌID</param>
-    /// <param name="attackLane">UŒ‚‚·‚éƒŒ[ƒ“‚ÌˆÊ’u(enum)</param>
+    /// <param name="playerID">ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®ID</param>
+    /// <param name="attackLane">æ”»æ’ƒã™ã‚‹ãƒ¬ãƒ¼ãƒ³ã®ä½ç½®(enum)</param>
     void CompositeAttack(int playerID, Lane attackLane)
     {
         Transform m_shotTransform = centerShotTransform[playerID];
-        GameObject m_hitTargetObject = AttackRayCast(m_shotTransform);                     //Ray‚É‚æ‚é–½’†”»’è‚ğs‚¤        
+        GameObject m_hitTargetObject = AttackRayCast(m_shotTransform);                     //Rayã«ã‚ˆã‚‹å‘½ä¸­åˆ¤å®šã‚’è¡Œã†        
         if (m_hitTargetObject != null)
         {
             m_hitTargetObject.GetComponent<TargetObject>().CompositeDamage(playerID, (int)attackLane);
@@ -121,10 +126,10 @@ public class RobotControl : MonoBehaviour
     ///////////////////////////////////////////////////////////////////////////////////
 
     /// <summary>
-    /// ƒvƒŒƒCƒ„[‚ÌUŒ‚‚Ìˆ—‚ğs‚¤
+    /// ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®æ”»æ’ƒã®å‡¦ç†ã‚’è¡Œã†
     /// </summary>
-    /// <param name="playerID">ƒvƒŒƒCƒ„[‚ÌID</param>
-    /// <param name="attackLane">UŒ‚‚·‚éƒŒ[ƒ“‚ÌˆÊ’u(enum)</param>
+    /// <param name="playerID">ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®ID</param>
+    /// <param name="attackLane">æ”»æ’ƒã™ã‚‹ãƒ¬ãƒ¼ãƒ³ã®ä½ç½®(enum)</param>
     public void Attack(int playerID, Lane attackLane)
     {
         if (PlaySceneManager.SceneManager.GetSetNowCondition ==
@@ -136,6 +141,8 @@ public class RobotControl : MonoBehaviour
             CompositeAttack(playerID, attackLane);
             return;
         }
+        if (playerID == 0) energySE.Play();
+        else overSE.Play();
         GameObject m_hitTargetObject = null;
         Transform m_shotTransform = null;
         if (attackLane == Lane.Center)
@@ -145,25 +152,33 @@ public class RobotControl : MonoBehaviour
         if (attackLane == Lane.Left)
             m_shotTransform = leftShotTransform[playerID];
 
-        m_hitTargetObject = AttackRayCast(m_shotTransform);                     //Ray‚É‚æ‚é–½’†”»’è‚ğs‚¤
+        m_hitTargetObject = AttackRayCast(m_shotTransform);                     //Rayã«ã‚ˆã‚‹å‘½ä¸­åˆ¤å®šã‚’è¡Œã†
 
         if (m_hitTargetObject != null)
         {
-            m_hitTargetObject.GetComponent<TargetObject>().Damage(playerID);
-            RayView(lineMaterials[playerID], m_shotTransform.position, m_hitTargetObject.transform.position);
+            BulletSpawn(m_shotTransform, m_hitTargetObject.transform, playerID);
         }
         else
         {
-            Vector3 m_endPosition = m_shotTransform.position + (m_shotTransform.transform.forward * attackDistance);
-            RayView(lineMaterials[playerID], m_shotTransform.position, m_endPosition);
+            GameObject m_endPosition = new GameObject();
+            m_endPosition.transform.position = m_shotTransform.position + (m_shotTransform.transform.forward * attackDistance);
+            Destroy(m_endPosition, 3);
+            BulletSpawn(m_shotTransform, m_endPosition.transform, playerID);
         }
     }
 
+    void BulletSpawn(Transform shotPos,Transform hitPos,int playerID)
+    {
+        GameObject m_obj = Instantiate(bulletObj[playerID]);
+        m_obj.transform.position = shotPos.position;
+        m_obj.GetComponent<HomingBullet>().TargetTransformSet(hitPos);
+    }
+
     /// <summary>
-    /// ã‚Éæ‚Á‚Ä‚éƒpƒCƒƒbƒg‚½‚¿‚ğ“®‚©‚·ˆ—
+    /// ä¸Šã«ä¹—ã£ã¦ã‚‹ãƒ‘ã‚¤ãƒ­ãƒƒãƒˆãŸã¡ã‚’å‹•ã‹ã™å‡¦ç†
     /// </summary>
-    /// <param name="playerID">ƒvƒŒƒCƒ„[‚Ìid</param>
-    /// <param name="axis">ƒXƒeƒBƒbƒN‚Ì“ü—Í</param>
+    /// <param name="playerID">ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®id</param>
+    /// <param name="axis">ã‚¹ãƒ†ã‚£ãƒƒã‚¯ã®å…¥åŠ›</param>
     public void Pilot(int playerID, Vector2 axis)
     {
 
