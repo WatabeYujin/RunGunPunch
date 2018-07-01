@@ -64,7 +64,11 @@ public class PlaySceneManager : MonoBehaviour
     void ComboView()
     {
         if (combo <= 1) return;
+<<<<<<< HEAD
         comboText.text = combo + "Combo!!";
+=======
+        comboText.text = comboText + "Combo!!";
+>>>>>>> origin/master
     }
 
     public float GetSpeed()
@@ -117,12 +121,26 @@ public class PlaySceneManager : MonoBehaviour
     {
         combo = 0;
     }
+<<<<<<< HEAD
 
 	public void BGMisPlay(bool value){
 		if (value)
 			BGMaudiosource.Play ();
 		else
 			BGMaudiosource.Pause ();
+=======
+
+	public void BGMisPlay(bool value){
+		if (value)
+			BGMaudiosource.Play ();
+		else
+			BGMaudiosource.Stop ();
+	}
+	public void SEPlay(AudioClip se){
+		SEaudiosource [seID].clip = se;
+		SEaudiosource [seID].Play ();
+
+>>>>>>> origin/master
 	}
 	public void SEPlay(AudioClip se){
 		SEaudiosource [seID].clip = se;

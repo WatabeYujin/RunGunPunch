@@ -21,8 +21,22 @@ public class TargetObject : MonoBehaviour
 	[SerializeField]
 	private float outsideStartPos = 100.0f; //画面外から来るオブジェクトが生成されてから移動する値
 	[SerializeField]
+<<<<<<< HEAD
 	private Transform stage;   //ステージのオブジェクト
 	public const float angle = 5.0f; //一秒当たりの回転角度
+=======
+	private GameObject stage;   //ステージのオブジェクト
+	public const float angle = 5.0f; //一秒当たりの回転角度
+
+    public int compositeCommand1Player = 0;//ボス用のコマンド入力
+    public int compositeCommand2Player = 0;//左=1,縦=2,右=3　（例）左左右縦の場合1132
+    private Transform testtrans;
+	private Vector3 stagePos; //回転の中心をとるために使う変数
+
+	private RaycastHit hit;
+
+	private Vector3 outsidePos; //画面外から来るオブジェクトの生成された位置
+>>>>>>> origin/master
 
 
     public int compositeCommand1Player = 0;//ボス用のコマンド入力
@@ -50,13 +64,20 @@ public class TargetObject : MonoBehaviour
     }
     ////////////////////////////////////////////////////////////////////////////////////
 	void Start(){
+<<<<<<< HEAD
         transform.eulerAngles = new Vector3(0, 180, 0);
+=======
+>>>>>>> origin/master
 		FirstTargetPositionGet ();
 	}
 
     void Update()
     {
+<<<<<<< HEAD
         TargetMove();
+=======
+        //TargetMove();
+>>>>>>> origin/master
         CompositeEvent();
 		if(targetMoveType == TargetMoveType.OutsideArea)
 		{
@@ -103,9 +124,14 @@ public class TargetObject : MonoBehaviour
     /// </summary>
     void TargetBreak()
     {
+<<<<<<< HEAD
         PlaySceneManager.SceneManager.SEPlay(breakSE);
         PlaySceneManager.SceneManager.ScoreUP(scorePoint);
         //撃破時の処理をここに入れる//
+=======
+        PlaySceneManager.SceneManager.ScoreUP(scorePoint);
+        //バフ系の処理をここに入れる//
+>>>>>>> origin/master
         switch (enchantmentStatus)
         {
             case EnchantmentStatus.Reverse:
@@ -126,7 +152,11 @@ public class TargetObject : MonoBehaviour
     void PlayerAttackEvent()
     {
         PlaySceneManager.SceneManager.ComboStop();
+<<<<<<< HEAD
         //ミスの処理をここに入れる//
+=======
+        //デバフ系の処理をここに入れる//
+>>>>>>> origin/master
 
 
         //ミスの処理をここに入れる//
@@ -142,6 +172,7 @@ public class TargetObject : MonoBehaviour
         isMove = false;
         EffectSpawn();
         if (targetType == TargetType.Composite)
+<<<<<<< HEAD
         {
             PlaySceneManager.SceneManager.GetSetNowCondition =
                 PlaySceneManager.Condition.None;
@@ -150,6 +181,11 @@ public class TargetObject : MonoBehaviour
             ComandView(1, false);
             MeshExplosion.meshExplosion.Explode(transform, transform.position, -GetComponent<Rigidbody>().velocity);
         }
+=======
+            PlaySceneManager.SceneManager.GetSetNowCondition = 
+                PlaySceneManager.Condition.None;
+        Destroy(gameObject);
+>>>>>>> origin/master
     }
 
     /// <summary>
@@ -178,6 +214,7 @@ public class TargetObject : MonoBehaviour
     }
 
 	void FirstTargetPositionGet(){
+<<<<<<< HEAD
         /*
         Transform m_stage = stage;   //targetに、"Sample"の名前のオブジェクトのコンポーネントを見つけてアクセスする
 
@@ -185,6 +222,16 @@ public class TargetObject : MonoBehaviour
                 
 		if (targetMoveType == TargetMoveType.Nomal) testtrans.LookAt(m_stage); //自分の向きをターゲットの正面に向ける
         */
+=======
+		Transform m_stage = stage.transform; //targetに、"Sample"の名前のオブジェクトのコンポーネントを見つけてアクセスする
+
+		stagePos = m_stage.position; //変数targetPosにSampleの位置情報を取得
+
+        
+
+        /*
+		if (targetMoveType == TargetMoveType.Nomal) testtrans.LookAt(m_stage); //自分の向きをターゲットの正面に向ける
+>>>>>>> origin/master
 
 		if (targetMoveType == TargetMoveType.OutsideArea)
 		{
@@ -196,6 +243,10 @@ public class TargetObject : MonoBehaviour
 
 			transform.position = m_pos;
 		}
+<<<<<<< HEAD
+=======
+        */
+>>>>>>> origin/master
 
 		//transform.Rotate(new Vector3(0, 0, Random.Range(0, 360)), Space.World); //自分をZ軸を中心に0～360でランダムに回転させる
 	}
@@ -225,8 +276,12 @@ public class TargetObject : MonoBehaviour
 
 			if (transform.position.x <= outsidePos.x)   //生成された位置のX座標になったら通常のオブジェクトの動きになる
 			{
+<<<<<<< HEAD
                 transform.position = new Vector3(outsidePos.x, transform.position.y,transform.position.z);
                 targetMoveType = TargetMoveType.Nomal;
+=======
+				targetMoveType = TargetMoveType.Nomal;
+>>>>>>> origin/master
 			}
 		}
 		else if(outsideStartPos < 0)
@@ -235,8 +290,12 @@ public class TargetObject : MonoBehaviour
 
 			if (transform.position.x >= outsidePos.x)
 			{
+<<<<<<< HEAD
                 transform.position = new Vector3(outsidePos.x, transform.position.y,transform.position.z);
                 targetMoveType = TargetMoveType.Nomal;
+=======
+				targetMoveType = TargetMoveType.Nomal;
+>>>>>>> origin/master
 
 			}
 		}        
@@ -270,6 +329,7 @@ public class TargetObject : MonoBehaviour
 		}
 	}
 
+<<<<<<< HEAD
     void ComandView(int playerID,bool view)
     {
         if (!view)
@@ -285,6 +345,8 @@ public class TargetObject : MonoBehaviour
         PlaySceneManager.SceneManager.ComandView(m_viewComand, playerID);
     }
         
+=======
+>>>>>>> origin/master
     ////////////////////////////////////////////////////////////////////////////////////
 
     /// <summary>
@@ -329,6 +391,7 @@ public class TargetObject : MonoBehaviour
             if (compositeCommand2Player % 10 != lane) return;
             compositeCommand2Player /= 10;
         }
+<<<<<<< HEAD
         ComandView(attackPlayerID,true);
         if (compositeCommand1Player != 0 || compositeCommand2Player != 0) return;
         TargetBreak();
@@ -340,4 +403,9 @@ public class TargetObject : MonoBehaviour
         FirstTargetPositionGet();
     }
 
+=======
+        if (compositeCommand1Player != 0 || compositeCommand2Player != 0) return;
+        TargetBreak();
+    }
+>>>>>>> origin/master
 }
