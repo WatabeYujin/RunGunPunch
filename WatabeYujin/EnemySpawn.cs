@@ -15,9 +15,8 @@ public class EnemySpawn : MonoBehaviour {
     private int spawnCount = 0;                 //スポーンを行った回数
 
 	void Start () {
-		
-	}
-	
+        SpawnEvent();
+    }	
 	
 	void Update () {
         TimeCount();
@@ -41,7 +40,7 @@ public class EnemySpawn : MonoBehaviour {
     /// <returns>スポーンできる場合trueを返し,不可能な場合falseを返す</returns>
     bool SpawnTimeCheck(float time)
     {
-        if(spawnInterval >= time)
+        if(spawnInterval <= time)
         {
             timeCount = 0;
             return true;
@@ -61,7 +60,6 @@ public class EnemySpawn : MonoBehaviour {
         GameObject spawnObj = Instantiate(spawnPrefub[spawnCount]);
         spawnObj.transform.position = spawnPosition.position;
         spawnCount++;
-
         return true;
     }
 }

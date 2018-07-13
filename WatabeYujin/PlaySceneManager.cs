@@ -29,8 +29,11 @@ public class PlaySceneManager : MonoBehaviour
     private Text energyComandText;
     [SerializeField]
     private Text overComandText;
+<<<<<<< HEAD
     [SerializeField]
     private yazirusimove[] yazi=new yazirusimove[2];
+=======
+>>>>>>> a7ac216852c9f9d62f3f202682bfe8676e393025
 
     static public PlaySceneManager SceneManager;
     private Color baseColor;
@@ -65,8 +68,17 @@ public class PlaySceneManager : MonoBehaviour
     }
     void ComboView()
     {
+<<<<<<< HEAD
         if (combo <= 1) comboText.text = "";
         else comboText.text = combo + "Combo!!";
+=======
+        if (combo <= 1) return;
+<<<<<<< HEAD
+        comboText.text = combo + "Combo!!";
+=======
+        comboText.text = comboText + "Combo!!";
+>>>>>>> origin/master
+>>>>>>> a7ac216852c9f9d62f3f202682bfe8676e393025
     }
 
     public float GetSpeed()
@@ -124,6 +136,14 @@ public class PlaySceneManager : MonoBehaviour
     {
         combo = 0;
     }
+<<<<<<< HEAD
+
+	public void BGMisPlay(bool value){
+		if (value)
+			BGMaudiosource.Play ();
+		else
+			BGMaudiosource.Pause ();
+=======
 
 	public void BGMisPlay(bool value){
 		if (value)
@@ -134,6 +154,15 @@ public class PlaySceneManager : MonoBehaviour
 	public void SEPlay(AudioClip se){
 		SEaudiosource [seID].clip = se;
 		SEaudiosource [seID].Play ();
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/master
+	}
+	public void SEPlay(AudioClip se){
+		SEaudiosource [seID].clip = se;
+		SEaudiosource [seID].Play ();
+>>>>>>> a7ac216852c9f9d62f3f202682bfe8676e393025
         seID++;
         if (seID >= 3) seID = 0;
 	}
