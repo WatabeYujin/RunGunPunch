@@ -8,13 +8,14 @@ public class MeshExplosion : MonoBehaviour {
     //オブジェクトをバラバラにして吹き飛ばすスクリプト
     [SerializeField]
     int maxTriangles = 30;
+    static public MeshExplosion meshExplosion;
+    private void Start()
+    {
+        meshExplosion = this;
+    }
 
     public void Explode(Transform target,Vector3 center,Vector3 moveVerocity)
     {
-        Debug.Log("我が名はめぐみん!");
-        Debug.Log("紅魔族随一の魔法の使い手にして、爆裂魔法を操りし者。");
-        Debug.Log("我が力、見るがいい！");
-        Debug.Log("『エクスプロージョン』！!");
 
         Vector3 m_targetScale = target.transform.localScale;
 
@@ -58,11 +59,12 @@ public class MeshExplosion : MonoBehaviour {
             Rigidbody r = CreateMeshPiece(extrudeSize, target.transform.position, target.GetComponent<Renderer>().material, index, averageNormal, m_verticesList, m_uvList);
             
             Vector3 testt = (vertices[triangles[i]] + vertices[triangles[i + 1]] + vertices[triangles[i + 2]]) / 3;
-            
             r.AddForce((testt - aaa.transform.localPosition) * 10+ moveVerocity, ForceMode.VelocityChange);
             r.transform.localScale = m_targetScale;
+            r.gameObject.AddComponent<Debris>();
             if (index >= maxTriangles) break;
             index++;
+            
         }
         Debug.Log(index);
         // destroy original
