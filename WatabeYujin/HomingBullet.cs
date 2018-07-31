@@ -44,36 +44,29 @@ bool DistanceCheck()
 
     void DestroyEvent()
     {
-<<<<<<< HEAD
         
         Destroy(gameObject); 
     }
     void Effect()
     {
         const float m_effectdestroyTime = 1.3f;
-=======
-        const float m_effectdestroyTime=1.3f;
->>>>>>> a7ac216852c9f9d62f3f202682bfe8676e393025
         if (effect)
         {
             GameObject m_obj = Instantiate(effect);
             m_obj.transform.position = transform.position;
             Destroy(m_obj, m_effectdestroyTime);
         }
-<<<<<<< HEAD
-=======
-        Destroy(gameObject); 
->>>>>>> a7ac216852c9f9d62f3f202682bfe8676e393025
     }
     public void OnCollisionEnter(Collision collision)
     {
         const string m_targetTagName = "Target";
         if (collision.transform.tag != m_targetTagName) return;
-<<<<<<< HEAD
         Effect();
-=======
->>>>>>> a7ac216852c9f9d62f3f202682bfe8676e393025
-        if (!collision.transform.GetComponent<TargetObject>().Damage(playerID)) return;
+        if (!collision.transform.GetComponent<TargetObject>().Damage(playerID))
+        {
+            DestroyEvent();
+            return;
+        }
         foreach (ContactPoint point in collision.contacts)
         {
             MeshExplosion.meshExplosion.Explode(collision.transform, point.point, thisRigidbody.velocity);
