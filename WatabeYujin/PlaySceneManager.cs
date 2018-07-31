@@ -29,11 +29,9 @@ public class PlaySceneManager : MonoBehaviour
     private Text energyComandText;
     [SerializeField]
     private Text overComandText;
-<<<<<<< HEAD
     [SerializeField]
     private yazirusimove[] yazi=new yazirusimove[2];
-=======
->>>>>>> a7ac216852c9f9d62f3f202682bfe8676e393025
+
 
     static public PlaySceneManager SceneManager;
     private Color baseColor;
@@ -42,6 +40,8 @@ public class PlaySceneManager : MonoBehaviour
     private float elapsedTime = 0;
 	private bool BGMPlay = true;
 	private int seID=0;
+    private int countUpScore;
+
     public enum Condition
     {
         None,
@@ -68,17 +68,8 @@ public class PlaySceneManager : MonoBehaviour
     }
     void ComboView()
     {
-<<<<<<< HEAD
         if (combo <= 1) comboText.text = "";
         else comboText.text = combo + "Combo!!";
-=======
-        if (combo <= 1) return;
-<<<<<<< HEAD
-        comboText.text = combo + "Combo!!";
-=======
-        comboText.text = comboText + "Combo!!";
->>>>>>> origin/master
->>>>>>> a7ac216852c9f9d62f3f202682bfe8676e393025
     }
 
     public float GetSpeed()
@@ -106,6 +97,31 @@ public class PlaySceneManager : MonoBehaviour
             elapsedTime += Time.deltaTime;
         }
     }
+
+    IEnumerator ScoreCountUp()
+    {
+        for(; countUpScore > 0; countUpScore--)
+        {
+            score++;
+            ScoreView();
+            yield return null;
+        }
+    }
+
+    IEnumerator ScorePopUpEvent()
+    {
+        const int m_maxfontSize = 40;
+        const int m_fontSize = 30;
+        scoreText.fontSize = m_maxfontSize;
+        for (; ; )
+        {
+            if (m_fontSize >= scoreText.fontSize) break;
+            scoreText.fontSize --;
+            yield return null;
+        }
+        scoreText.fontSize = m_fontSize;
+    }
+
     public Condition GetSetNowCondition
     {
         get
@@ -129,21 +145,15 @@ public class PlaySceneManager : MonoBehaviour
     public void ScoreUP(int getScore)
     {
         combo++;
-        score += getScore;
+        countUpScore += getScore;
+        StartCoroutine(ScoreCountUp());
+        StartCoroutine(ScorePopUpEvent());
     }
 
     public void ComboStop()
     {
         combo = 0;
     }
-<<<<<<< HEAD
-
-	public void BGMisPlay(bool value){
-		if (value)
-			BGMaudiosource.Play ();
-		else
-			BGMaudiosource.Pause ();
-=======
 
 	public void BGMisPlay(bool value){
 		if (value)
@@ -154,15 +164,6 @@ public class PlaySceneManager : MonoBehaviour
 	public void SEPlay(AudioClip se){
 		SEaudiosource [seID].clip = se;
 		SEaudiosource [seID].Play ();
-<<<<<<< HEAD
-=======
-
->>>>>>> origin/master
-	}
-	public void SEPlay(AudioClip se){
-		SEaudiosource [seID].clip = se;
-		SEaudiosource [seID].Play ();
->>>>>>> a7ac216852c9f9d62f3f202682bfe8676e393025
         seID++;
         if (seID >= 3) seID = 0;
 	}
@@ -204,4 +205,6 @@ public class PlaySceneManager : MonoBehaviour
             overComandText.text = m_viewText;
         }
     }
+
+
 }
