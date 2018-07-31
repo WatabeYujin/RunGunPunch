@@ -68,7 +68,7 @@ public class MeshExplosion : MonoBehaviour {
         }
         Debug.Log(index);
         // destroy original
-        Destroy(target.gameObject);
+        //Destroy(target.gameObject);
     }
 
     Rigidbody CreateMeshPiece(float extrudeSize, Vector3 pos, Material mat, int index, Vector3 faceNormal, List<Vector3> verticeList, List<Vector2> uvList)

@@ -22,16 +22,19 @@ public class TargetObject : MonoBehaviour
 	private float outsideStartPos = 100.0f; //画面外から来るオブジェクトが生成されてから移動する値
 	[SerializeField]
 	private Transform stage;   //ステージのオブジェクト
+    [SerializeField]
+    private Transform presentbox;
 	public const float angle = 5.0f; //一秒当たりの回転角度
     private yazirusimove[] yazi = new yazirusimove[2];
 
     public int compositeCommand1Player = 0;//ボス用のコマンド入力
     public int compositeCommand2Player = 0;//左=1,縦=2,右=3　（例）左左右縦の場合1132
     private Transform testtrans;
-	private Vector3 stagePos; //回転の中心をとるために使う変数
+	private Vector3 stagePos = new Vector3(0,-200,0); //回転の中心をとるために使う変数
     private RaycastHit hit;
     private Vector3 outsidePos; //画面外から来るオブジェクトの生成された位置
     private bool isMove = true;     //移動しているか否か
+
     public enum TargetType         //ターゲットの種類
     {
         EnergyGun = 0,
@@ -50,19 +53,24 @@ public class TargetObject : MonoBehaviour
     }
     ////////////////////////////////////////////////////////////////////////////////////
 	void Start(){
+        if (targetMoveType == TargetMoveType.OutsideArea && presentbox == null)
+        {
+            isMove = false;
+            GetComponent<BoxCollider>().enabled = false;
+        }
         transform.eulerAngles = new Vector3(0, 180, 0);
 		FirstTargetPositionGet ();
 	}
 
     void Update()
     {
-        TargetMove();
+        //TargetMove();
         CompositeEvent();
 		if(targetMoveType == TargetMoveType.OutsideArea)
 		{
 			OutsideAreaMove();
 		}
-		//SlopeAdjust();
+		SlopeAdjust();
     }
 
     /// <summary>
@@ -103,8 +111,7 @@ public class TargetObject : MonoBehaviour
     /// </summary>
     void TargetBreak()
     {
-        PlaySceneManager.SceneManager.SEPlay(breakSE);
-        PlaySceneManager.SceneManager.ScoreUP(scorePoint);
+		ScoreEvent ();
         //撃破時の処理をここに入れる//
         switch (enchantmentStatus)
         {
@@ -149,8 +156,8 @@ public class TargetObject : MonoBehaviour
             ComandView(0, false);
             ComandView(1, false);
         }
-        if (targetType == TargetType.Composite)
-            Destroy(gameObject);
+        //if (targetType == TargetType.Composite)
+        Destroy(gameObject);
     }
 
     /// <summary>
@@ -214,6 +221,16 @@ public class TargetObject : MonoBehaviour
     }
 
 	/// <summary>
+	/// オブジェクトのタイプを切り替える
+	/// </summary>
+	public void TargetTypeChange()
+	{
+
+		targetType = (TargetType)Mathf.Abs((int)targetType - 1);
+
+	}
+
+	/// <summary>
 	/// 画面外から来るオブジェクトの動き
 	/// </summary>
 	private void OutsideAreaMove()
@@ -222,22 +239,21 @@ public class TargetObject : MonoBehaviour
 
 		if(outsideStartPos > 0)
 		{
-			transform.position += transform.right * PlaySceneManager.SceneManager.GetSpeed()/4 * angle;   // オブジェクトをステージに向かって動かす
-
-			if (transform.position.x <= outsidePos.x)   //生成された位置のX座標になったら通常のオブジェクトの動きになる
+            transform.position -= transform.right * PlaySceneManager.SceneManager.GetSpeed()*30;   // オブジェクトをステージに向かって動かす
+            Debug.Log(PlaySceneManager.SceneManager.GetSpeed());
+            if (transform.position.x <= outsidePos.x)   //生成された位置のX座標になったら通常のオブジェクトの動きになる
 			{
                 transform.position = new Vector3(outsidePos.x, transform.position.y,transform.position.z);
-                targetMoveType = TargetMoveType.Nomal;
+                //targetMoveType = TargetMoveType.Nomal;
 			}
 		}
 		else if(outsideStartPos < 0)
 		{
-			transform.position -= transform.right * PlaySceneManager.SceneManager.GetSpeed()/4 * angle;
-
-			if (transform.position.x >= outsidePos.x)
+            transform.position += transform.right * PlaySceneManager.SceneManager.GetSpeed()*30;
+            if (transform.position.x >= outsidePos.x)
 			{
                 transform.position = new Vector3(outsidePos.x, transform.position.y,transform.position.z);
-                targetMoveType = TargetMoveType.Nomal;
+                //targetMoveType = TargetMoveType.Nomal;
 
 			}
 		}        
@@ -249,12 +265,11 @@ public class TargetObject : MonoBehaviour
 	private void SlopeAdjust()
 	{
 		if (!isMove) return;
-
-
+        
 		Vector3 m_axis = transform.TransformDirection(Vector3.right);
 		transform.RotateAround(stagePos, m_axis, angle *- PlaySceneManager.SceneManager.GetSpeed()); // オブジェクトの回転
-
-
+        transform.eulerAngles=new Vector3(0, 180, 0);
+        /*
 		if (Physics.Raycast(                // Transformの真下の地形の法線を調べる
 			transform.position,
 			-transform.up,
@@ -268,7 +283,7 @@ public class TargetObject : MonoBehaviour
 
             transform.eulerAngles = Vector3.zero;
 			//transform.rotation *= m_q;      // 自分を回転させる
-		}
+		}*/
 	}
 
     void ComandView(int playerID,bool view)
@@ -285,7 +300,41 @@ public class TargetObject : MonoBehaviour
             m_viewComand = compositeCommand2Player % 10;
         PlaySceneManager.SceneManager.ComandView(m_viewComand, playerID);
     }
-        
+
+	void ScoreEvent(){
+
+		PlaySceneManager.SceneManager.ScoreUP(scorePoint);
+	}
+
+	void PresentBaloonDamageEvent(){
+        if (presentbox != null)
+        {
+            presentbox.parent = null;
+            presentbox.GetComponent<TargetObject>().BaloonMove();
+        }
+        ScoreEvent();
+        TargetBreak();
+    }
+
+    /// <summary>
+    /// バルーン用の移動処理
+    /// </summary>
+    /// <returns></returns>
+    IEnumerator BaloonMoveIEnumerator()
+    {
+        isMove = false;
+        float m_movePosY = -2;
+        for (int i = 0; i < 10; i++)
+        {
+            Vector3 m_axis = transform.TransformDirection(Vector3.right);
+            transform.RotateAround(stagePos, m_axis, angle * PlaySceneManager.SceneManager.GetSpeed() * 3); // オブジェクトの回転
+            transform.position += Vector3.up * m_movePosY / 10;
+            yield return null;
+        }
+        GetComponent<BoxCollider>().enabled = true;
+        isMove = true;
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////
 
     /// <summary>
@@ -296,18 +345,17 @@ public class TargetObject : MonoBehaviour
     public bool Damage(int attackPlayerID)
     {
         if (attackPlayerID == 0)
-        {
-            if (targetType == TargetType.OverArm) return false;
-            TargetBreak();
-            return true;
-        }
+			if (targetType != TargetType.EnergyGun) return false;
         else if (attackPlayerID == 1)
-        {
-            if (targetType == TargetType.EnergyGun) return false;
-            TargetBreak();
-            return true;
-        }
+            if (targetType != TargetType.OverArm) return false;
         else return false;
+        Debug.Log(targetMoveType);
+		if(targetMoveType == TargetMoveType.OutsideArea){
+            PresentBaloonDamageEvent ();
+			return true;
+		}
+		TargetBreak();
+		return true;
     }
 
     /// <summary>
@@ -341,4 +389,8 @@ public class TargetObject : MonoBehaviour
         FirstTargetPositionGet();
     }
 
+    public void BaloonMove()
+    {
+        StartCoroutine(BaloonMoveIEnumerator());
+    }
 }
