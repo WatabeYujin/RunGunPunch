@@ -23,8 +23,7 @@ public class ObjectCreater : EditorWindow {
     private const string dirPath = "Assets/Obstacle/";              // 出力するディレクトリのパス
     private const int range = 3;                                    // 障害物の全体の範囲
 
-    private const string pbDirPath = "Assets/Prefabs/";             // 障害物に使うプレファブのディレクトリ
-
+    private const float intervalY = 0.5f;                           // オブジェクトのポジションYの調整用
 
     string s = "parent : 生成するオブジェクトの親になるオブジェクト\n\nnum : 生成するオブジェクトの個数\n\ninterval : 生成するオブジェクトの間隔\n\nPrefabName : 保存するプレファブの名前\n";
 /// ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -148,7 +147,7 @@ public class ObjectCreater : EditorWindow {
             
 
             pos.z += intervalZ;                                                                     // ポジションZをintervalZの数値だけ間隔をあける
-            //pos.y -= i * 0.5f;
+            pos.y -= i * intervalY;
         } 
         
     }

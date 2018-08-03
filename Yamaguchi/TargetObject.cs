@@ -33,8 +33,7 @@ public class TargetObject : MonoBehaviour
     private Vector3 outsidePos; //画面外から来るオブジェクトの生成された位置
     private bool isMove = true;     //移動しているか否か
 
-    private float posY = 10.0f;
-    private float radius;
+    private float posY = 1.0f;
 
     public enum TargetType         //ターゲットの種類
     {
@@ -184,13 +183,7 @@ public class TargetObject : MonoBehaviour
 
 	void FirstTargetPositionGet(){
 
-        Transform m_stage = GameObject.Find("TestStage").transform;   //targetに、"Sample"の名前のオブジェクトのコンポーネントを見つけてアクセスする
-
-		stagePos = m_stage.position; //変数targetPosにSampleの位置情報を取得
-
-        //if (targetMoveType == TargetMoveType.Nomal) testtrans.LookAt(m_stage); //自分の向きをターゲットの正面に向ける
-
-        radius = m_stage.GetComponent<SphereCollider>().radius;
+		stagePos = GameObject.Find("TestStage").transform.position; //変数targetPosにSampleの位置情報を取得
 
         if (targetMoveType == TargetMoveType.OutsideArea)
 		{
@@ -267,32 +260,26 @@ public class TargetObject : MonoBehaviour
 
 
         Vector3 m_axis = transform.TransformDirection(Vector3.right);
-        transform.RotateAround(stagePos, m_axis, angle * -PlaySceneManager.SceneManager.GetSpeed()); // オブジェクトの回転
 
-        //float y = radius * Mathf.Sin(Time.time * PlaySceneManager.SceneManager.GetSpeed());
-        //float z = radius * Mathf.Cos(Time.time * PlaySceneManager.SceneManager.GetSpeed());
+        transform.RotateAround(stagePos, m_axis, angle * PlaySceneManager.SceneManager.GetSpeed()); // オブジェクトの回転
 
-        //transform.position = new Vector3(transform.position.x,transform.position.y + y,transform.position.z + z);
-
-        transform.eulerAngles = new Vector3(0, 0, 0);
+        transform.eulerAngles = new Vector3(0, 180, 0);
 
 
+        //    if (Physics.Raycast(                // Transformの真下の地形の法線を調べる
+        //        transform.position,
+        //        -transform.up,
+        //        out hit,
+        //        float.PositiveInfinity))
+        //    {
+
+        //        Quaternion m_q = Quaternion.FromToRotation(     // 傾きの差を求める
+        //            transform.up,
+        //            hit.normal);
 
 
-    //    if (Physics.Raycast(                // Transformの真下の地形の法線を調べる
-    //        transform.position,
-    //        -transform.up,
-    //        out hit,
-    //        float.PositiveInfinity))
-    //    {
-
-    //        Quaternion m_q = Quaternion.FromToRotation(     // 傾きの差を求める
-    //            transform.up,
-    //            hit.normal);
-
-
-    //        //transform.rotation *= m_q;      // 自分を回転させる
-    //    }
+        //        //transform.rotation *= m_q;      // 自分を回転させる
+        //    }
     }
 
     void ComandView(int playerID,bool view)
