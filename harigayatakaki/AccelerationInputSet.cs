@@ -61,9 +61,7 @@ public class AccelerationInputSet : MonoBehaviour
 
     void Start()
     {
-        Debug.Log(PlayerPrefs.GetInt(saveKey));
-        LogScore = PlayerPrefs.GetInt(saveKey);
-
+        //ログ用*****************************************************************************
         txt.text =
             "Left\n" + log[0, 0] + "\n" + log[0, 1] + "\n" + log[0, 2] + "\n" + log[0, 3] + "\n" + log[0, 4] + "\n\n" +
             "Right\n" + log[1, 0] + "\n" + log[1, 1] + "\n" + log[1, 2] + "\n" + log[1, 3] + "\n" + log[1, 4] + "\n";
@@ -75,15 +73,12 @@ public class AccelerationInputSet : MonoBehaviour
                           origin[0, 0] + "\n" + origin[0, 1] + "\n" + origin[0, 2] + "\n" + origin[0, 3] + "\n" + origin[0, 4] + "\n\n" +
                     "SampleRight\n" +
                           origin[1, 0] + "\n" + origin[1, 1] + "\n" + origin[1, 2] + "\n" + origin[1, 3] + "\n" + origin[1, 4];
+        //*****************************************************************************
     }
-    private NpadState npadState = new NpadState();
     void Update()
     {
-        testText.text = "" + LogScore;
-        testText1.text = "" + Score;
-        if (GetInput.ButtonGet(NpadButton.R, Style.Down) || GetInput.ButtonGet(NpadButton.L, Style.Down))
-        { test(); }
-          ControlvalueButton();
+        ControlvalueButton();
+        //ログ用*****************************************************************************
         if (GetInput.ButtonGet(NpadButton.ZL, Style.Down) || GetInput.ButtonGet(NpadButton.ZR, Style.Down))
         {
             txt.text =
@@ -94,130 +89,141 @@ public class AccelerationInputSet : MonoBehaviour
             log[1, 0] + logLane[1, 0] + "\n" + log[1, 1] + logLane[1, 1] + "\n" + log[1, 2] + logLane[1, 2] + "\n" +
             log[1, 3] + logLane[1, 3] + "\n" + log[1, 4] + logLane[1, 4] + "\n";
         }
+        //デバッグ用*****************************************************************************
         if (GetInput.ButtonGet(NpadButton.Plus) || GetInput.ButtonGet(NpadButton.Minus))
         {
+            //シーンのリセット
             SceneManager.LoadScene("test");
         }
+        //*****************************************************************************
         for (int i = 0; i <= 1; i++)
             SwingCheck(i);
     }
-    int LogScore = 0;
-    int Score = 0;
-    string saveKey = "save";
-
-    public Text testText;
-    public Text testText1;
-
-    void test()
-    {
-        LogScore++;
-        Score++;
-        PlayerPrefs.SetInt(saveKey, LogScore);
-        PlayerPrefs.Save();
-    }
-
-    
+    /// <summary>どの方向にコントローラーを振ったかの判定</summary>
+    /// <param name="handNum">コントローラーの左右　0=左　1=右</param>
     void SwingCheck(int handNum)
     {
-        Vector3[] m_acceleration = new Vector3[2];
-
         if (handNum == 0)
         {
+            //左コントローラーの加速度を取得
             nowAcceleration[handNum] = GetInput.AccelerationGet(Hand.Left);
+            //コントローラーの持つ向きが逆なのでZ軸を反転
             nowAcceleration[handNum].z *= -1;
         }
 
         if (handNum == 1)
+        {
+            //右コントローラーの加速度を取得
             nowAcceleration[handNum] = GetInput.AccelerationGet(Hand.Right);
+        }
+        /*この先、各コントローラーごとに判定を作成*/
 
+        //delayFlagがfalseの時、実行
         if (!delayFlag[handNum])
         {
+            //samplingFlagがfalseの時、取得した加速度のY又はZが一定値以上の時、samplingFlagをtrueにしサンプリング開始
             if (!samplingFlag[handNum])
                 samplingFlag[handNum] =
                     Mathf.Abs(nowAcceleration[handNum].z) >= m_controlValue_z[handNum] ||
                     Mathf.Abs(nowAcceleration[handNum].y) >= m_controlValue_y[handNum];
-
+            //samplingFlagがtrueの時、実行
             if (samplingFlag[handNum])
-            {
-                accelerationKeep[handNum, listCount[handNum]] = nowAcceleration[handNum];
-                listCount[handNum]++;
+            {   //加速度をaccelerationKeep配列に格納し、index用のlistCount[handNum]をインクリメント
+                accelerationKeep[handNum, listCount[handNum]++] = nowAcceleration[handNum];
+                //ログ用*****************************************************************************
                 txt1.text = "OriginLeft\n" +
                           accelerationKeep[0, 0] + "\n" + accelerationKeep[0, 1] + "\n" + accelerationKeep[0, 2] + "\n" + accelerationKeep[0, 3] + "\n" + accelerationKeep[0, 4] + "\n" +
                       "\nOriginRight\n" +
                           accelerationKeep[1, 0] + "\n" + accelerationKeep[1, 1] + "\n" + accelerationKeep[1, 2] + "\n" + accelerationKeep[1, 3] + "\n" + accelerationKeep[1, 4];
+                //*****************************************************************************
+                //配列が全て埋まった時、実行
                 if (listCount[handNum] >= listSize)
                 {
                     for (int i = 0; i < listSize; i++)
                     {
-                        
-
+                        //格納した加速度のZ軸がマイナスの時、二次元配列mix[handNum, (int)Line.Left]に加算
                         if (accelerationKeep[handNum, i].z <= 0)
                             mix[handNum, (int)Line.Left] += accelerationKeep[handNum, i].z;
+                        //格納した加速度のZ軸がプラスの時、二次元配列mix[handNum, (int)Line.Right]に加算
                         if (accelerationKeep[handNum, i].z >= 0)
                             mix[handNum, (int)Line.Right] += accelerationKeep[handNum, i].z;
-
-                        if (//Mathf.Abs(accelerationKeep[handNum, i].z) < y_shake_range[handNum] &&
-                             Mathf.Abs(accelerationKeep[handNum, i].y) >= m_controlValue_y[handNum])
+                        //格納した加速度のY軸の絶対値が一定以上の時、二次元配列mix[handNum, (int)Line.Center]に加算
+                        if (Mathf.Abs(accelerationKeep[handNum, i].y) >= m_controlValue_y[handNum])
                             mix[handNum, (int)Line.Center] += accelerationKeep[handNum, i].y;
-
+                        //ログ用*****************************************************************************
                         Sample[handNum, i] = new Vector3(mix[handNum, (int)Line.Left], mix[handNum, (int)Line.Center], mix[handNum, (int)Line.Right]);
                         txt2.text = "SampleLeft\n" +
                            Sample[0, 0] + "\n" + Sample[0, 1] + "\n" + Sample[0, 2] + "\n" + Sample[0, 3] + "\n" + Sample[0, 4] +
                        "\nSampleRight\n" +
                            Sample[1, 0] + "\n" + Sample[1, 1] + "\n" + Sample[1, 2] + "\n" + Sample[1, 3] + "\n" + Sample[1, 4];
+                        //*****************************************************************************
                     }
-
-                    Support(handNum,mix);
-
+                    //Z軸の値補正用の関数(現在使用してない)
+                    Support(handNum, mix);
+                    //sideに【mix[handNum, (int)Line.Left]】と【mix[handNum, (int)Line.Right]】の大きい方を代入
                     side[handNum] =
                         Mathf.Abs(mix[handNum, (int)Line.Left]) > Mathf.Abs(mix[handNum, (int)Line.Right]) ?
                         mix[handNum, (int)Line.Left] : mix[handNum, (int)Line.Right];
-
+                    //accelerationKeep配列の中を初期化
                     for (int i = 0; i < listSize; i++)
                         accelerationKeep[handNum, i] = Vector3.zero;
+                    //index用のlistCount[handNum]を0に
                     listCount[handNum] = 0;
+                    //サンプリング終了なのでsamplingFlagをfalseに
                     samplingFlag[handNum] = false;
+                    //サンプリング終了時に振った方向を調べるためcheck[handNum]をtrueに
                     check[handNum] = true;
                 }
             }
+            //サンプリング終了時に実行
             if (check[handNum])
             {
+                //加算された加速度のY軸とZ軸の絶対値を比べる
                 if (Mathf.Abs(side[handNum]) > Mathf.Abs(mix[handNum, (int)Line.Center]))
                 {
+                    //Z軸の絶対値の方が大きいとき
+
+                    //Z軸がプラスの時
                     if (side[handNum] >= 0)
                     {
+                        //右レーンに対しAttack
                         roboCon.Attack(handNum, RobotControl.Lane.Right);
                         StartCoroutine(DelayTime(handNum, RobotControl.Lane.Right));
                     }
-                    else
-                    {
+                    else//Z軸がマイナスの時
+                    {   //左レーンに対しAttack
                         roboCon.Attack(handNum, RobotControl.Lane.Left);
                         StartCoroutine(DelayTime(handNum, RobotControl.Lane.Left));
                     }
                 }
                 else
                 {
-                    //if (Mathf.Abs(side[handNum]) - Mathf.Abs(mix[handNum, (int)Line.Center]) > 0.5f)
+                    //Y軸の方が大きいとき
+
+                    //Z軸の絶対値が6より大きい時、Z軸判定を行う
                     if (Mathf.Abs(side[handNum]) > 6f)
                     {
+                        //Z軸がプラスの時
                         if (side[handNum] >= 0)
                         {
+                            //右レーンに対しAttack
                             roboCon.Attack(handNum, RobotControl.Lane.Right);
                             StartCoroutine(DelayTime(handNum, RobotControl.Lane.Right));
                         }
-                        else
-                        {
+                        else//Z軸がマイナスの時
+                        {   //左レーンに対しAttack
                             roboCon.Attack(handNum, RobotControl.Lane.Left);
                             StartCoroutine(DelayTime(handNum, RobotControl.Lane.Left));
                         }
                     }
                     else
                     {
-                        //縦の判定
+                        //中央レーンに対しAttack
                         roboCon.Attack(handNum, RobotControl.Lane.Center);
                         StartCoroutine(DelayTime(handNum, RobotControl.Lane.Center));
                     }
                 }
+                //判定終了なのでcheck[handNum]をfalseに
                 check[handNum] = false;
             }
         }
@@ -225,8 +231,13 @@ public class AccelerationInputSet : MonoBehaviour
 
     IEnumerator DelayTime(int handNum, RobotControl.Lane Lane)
     {
+        //判定終了時delayFlag[handNum]
         delayFlag[handNum] = true;
         yield return new WaitForSeconds(0.3f);
+        delayFlag[handNum] = false;
+        for (int i = 0; i < 3; i++)
+            mix[handNum, i] = 0;
+        //ログ用*****************************************************************************
         log[handNum, index[handNum]] = new Vector3(mix[handNum, (int)Line.Left], mix[handNum, (int)Line.Center], mix[handNum, (int)Line.Right]);
         logLane[handNum, index[handNum]] = Lane;
         if (index[handNum] != 4)
@@ -240,16 +251,13 @@ public class AccelerationInputSet : MonoBehaviour
             "\nRight\n" +
              log[1, 0] + logLane[1, 0] + "\n" + log[1, 1] + logLane[1, 1] + "\n" + log[1, 2] + logLane[1, 2] + "\n" +
              log[1, 3] + logLane[1, 3] + "\n" + log[1, 4] + logLane[1, 4] + "\n";
-
-        for (int i = 0; i < 3; i++)
-            mix[handNum, i] = 0;
-        delayFlag[handNum] = false;
+        //*****************************************************************************
     }
-    void Support(int handNum,float[,] mix)
+    void Support(int handNum, float[,] mix)
     {
-        if(false)
+        if (false)
         {
-            switch(false/*gripHand[handNum]*/)
+            switch (false/*gripHand[handNum]*/)
             {
                 //case /*Left*///mix[handNum,(int)Line.Right]*1.02;break;
                 //case /*Right*///mix[handNum,(int)Line.Left]*1.02;break;
@@ -257,7 +265,7 @@ public class AccelerationInputSet : MonoBehaviour
             }
         }
 
-        
+
     }
     void ControlvalueButton()
     {
