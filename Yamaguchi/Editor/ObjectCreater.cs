@@ -13,7 +13,6 @@ public class ObjectCreater : EditorWindow {
     private List<GameObject> prefabs = new List<GameObject>();      // 生成するプレファブ
     private GameObject tObj = null;                                 // listに入れておく変数
     private int numZ = 1;                                           // Z軸に生成するオブジェクトの数
-    private float intervalZ = 1;                                    // Z軸に生成するオブジェクトの間隔
 
     private const int row = 3;                                      // 障害物の行
     private const int column = 2;                                   // 障害物の列
@@ -23,7 +22,8 @@ public class ObjectCreater : EditorWindow {
     private const string dirPath = "Assets/Obstacle/";              // 出力するディレクトリのパス
     private const int range = 3;                                    // 障害物の全体の範囲
 
-    private const float intervalY = 0.5f;                           // オブジェクトのポジションYの調整用
+    private GameObject stage;
+    private float radius = 130.0f;
 
     string s = "parent : 生成するオブジェクトの親になるオブジェクト\n\nnum : 生成するオブジェクトの個数\n\ninterval : 生成するオブジェクトの間隔\n\nPrefabName : 保存するプレファブの名前\n";
 /// ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -44,14 +44,17 @@ public class ObjectCreater : EditorWindow {
     {
         EditorGUILayout.Space();
         
-        parent = EditorGUILayout.ObjectField("Parent", parent, typeof(GameObject),true) as GameObject;      
+        parent = EditorGUILayout.ObjectField("Parent", parent, typeof(GameObject),true) as GameObject;
 
+        if (parent != null)
+        {
+            pos = parent.transform.position;
+        }
+        
         GUILayout.Space(20.0f);
 
         numZ = int.Parse(EditorGUILayout.TextField("num", numZ.ToString()));                                // 生成するオブジェクトの数を設定
-
-        intervalZ = int.Parse(EditorGUILayout.TextField("interval", intervalZ.ToString()));                 // オブジェクトを生成する間隔
-
+        
         GUILayout.Space(20.0f);
 
         for (int i = 0; i < numZ; i++)
@@ -61,8 +64,6 @@ public class ObjectCreater : EditorWindow {
             EditorGUILayout.Space();
         }
         
-        
-
         GenerationPosition();       //プレファブを生成する位置を指定
 
         EditorGUILayout.Space();
@@ -128,28 +129,36 @@ public class ObjectCreater : EditorWindow {
     private void Create()
     {
         if (prefabs[0] == null) return;
+        
 
-        int m_count = 0;                                                                              // 生成したオブジェクトに付ける番号
+        //オブジェクト間の角度差
+        float angleDiff = 180f / (float)numZ;
 
-        pos.z = -(numZ - 1) * intervalZ / 2;                                                        // 最初に生成するオブジェクトのポジションZ
+        //各オブジェクトを円状に配置
         for (int i = 0; i < numZ; i++)
         {
+            pos = parent.transform.position;
+
+            float angle = (90 - angleDiff * i) * Mathf.Deg2Rad;
+            pos.y -= radius * Mathf.Cos(angle);
+            pos.z -= radius * Mathf.Sin(angle);
+
             if (prefabs[i])
             {
                 GameObject m_obj = Instantiate(prefabs[i], pos, Quaternion.identity) as GameObject;       // オブジェクト生成
 
-                m_obj.name = prefabs[i].name + m_count++;                                                   // 生成したオブジェクトの名前に番号を付ける
+                m_obj.name = prefabs[i].name + i;                                                   // 生成したオブジェクトの名前に番号を付ける
 
                 if (parent) m_obj.transform.parent = parent.transform;                                    // parentがあればparentの子オブジェクトにする
 
                 Undo.RegisterCreatedObjectUndo(m_obj, "Object Creater");                                  // オブジェクトを生成したものをUndo履歴に入れる
-            }
-            
 
-            pos.z += intervalZ;                                                                     // ポジションZをintervalZの数値だけ間隔をあける
-            pos.y -= i * intervalY;
-        } 
-        
+                //prefabs[i].transform.position = pos;
+            }
+
+            
+        }
+
     }
 
     /// <summary>
