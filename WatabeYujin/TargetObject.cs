@@ -302,8 +302,9 @@ public class TargetObject : MonoBehaviour
     }
 
 	void ScoreEvent(){
+        Vector2 m_targetPos = RectTransformUtility.WorldToScreenPoint(Camera.main, transform.position);
 
-		PlaySceneManager.SceneManager.ScoreUP(scorePoint);
+        PlaySceneManager.SceneManager.ScoreUP(scorePoint, m_targetPos);
 	}
 
 	void PresentBaloonDamageEvent(){

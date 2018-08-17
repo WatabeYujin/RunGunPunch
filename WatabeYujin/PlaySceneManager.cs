@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.UI;
+using DG.Tweening;
 
 public class PlaySceneManager : MonoBehaviour
 {
@@ -31,7 +32,8 @@ public class PlaySceneManager : MonoBehaviour
     private Text overComandText;
     [SerializeField]
     private yazirusimove[] yazi=new yazirusimove[2];
-
+    [SerializeField]
+    private Sprite[] numimage;
 
     static public PlaySceneManager SceneManager;
     private Color baseColor;
@@ -142,12 +144,64 @@ public class PlaySceneManager : MonoBehaviour
         else directionalLight.color = baseColor;
     }
 
-    public void ScoreUP(int getScore)
+    IEnumerator ScoreCountMove(int score,Vector2 scorePos)
+    {
+		Vector2 m_scorePos = new Vector2 (Screen.width-Screen.width/10, Screen.height-Screen.height/10);
+		const float m_moveTime = 0.5f;
+        const float m_popmoveTime = 0.3f;
+        GameObject m_textObj = new GameObject();
+		Destroy (m_textObj, m_moveTime);
+        m_textObj.transform.parent = GameObject.Find("Canvas").transform;
+        Image m_text= m_textObj.AddComponent<Image>();
+        TextImageView(score, m_text);
+		RectTransform m_rect = m_textObj.GetComponent<RectTransform>();
+
+        m_rect.position = scorePos;
+        Vector3 m_popMove = new Vector3(Random.Range(-100.0f, 100.0f), Random.Range(-100.0f, 100.0f));
+        m_rect.DOMove(m_rect.transform.position+ m_popMove, m_popmoveTime);
+        yield return new WaitForSeconds(m_popmoveTime);
+
+        
+		m_rect.DOMove(m_scorePos, m_moveTime);
+		yield return new WaitForSeconds (m_moveTime);
+    }
+
+    void TextImageView(int score,Image image)
+    {
+        var digit = score;
+        //要素数0には１桁目の値が格納
+        List<int> number = new List<int>();
+        while (digit != 0)
+        {
+            score = digit % 10;
+            digit = digit / 10;
+            number.Add(score);
+        }
+
+        image.sprite = numimage[number[0]];
+        for (int i = 1; i < number.Count; i++)
+        {
+            //複製
+            RectTransform scoreimage = (RectTransform)Instantiate(image.gameObject).transform;
+            scoreimage.SetParent(this.transform, false);
+            scoreimage.localPosition = new Vector2(
+                scoreimage.localPosition.x - scoreimage.sizeDelta.x * i,
+                scoreimage.localPosition.y);
+            scoreimage.GetComponent<Image>().sprite = numimage[number[i]];
+        }
+    }
+
+    IEnumerator ScoreUpIenumerator(int getScore, Vector2 scorePos)
     {
         combo++;
         countUpScore += getScore;
+        yield return StartCoroutine(ScoreCountMove(getScore, scorePos));
         StartCoroutine(ScoreCountUp());
         StartCoroutine(ScorePopUpEvent());
+    }
+
+    public void ScoreUP(int getScore,Vector2 scorePos){
+		StartCoroutine (ScoreUpIenumerator (getScore, scorePos));
     }
 
     public void ComboStop()
