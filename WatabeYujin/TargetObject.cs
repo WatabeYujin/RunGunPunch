@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using DG.Tweening;
 
 public class TargetObject : MonoBehaviour
 {
@@ -32,9 +33,9 @@ public class TargetObject : MonoBehaviour
     private Transform testtrans;
 	private Vector3 stagePos = new Vector3(0,-200,0); //回転の中心をとるために使う変数
     private RaycastHit hit;
-    private Vector3 outsidePos; //画面外から来るオブジェクトの生成された位置
+    private float spawnPosX; //オブジェクトの生成された際のx軸
     private bool isMove = true;     //移動しているか否か
-
+    
     public enum TargetType         //ターゲットの種類
     {
         EnergyGun = 0,
@@ -44,7 +45,9 @@ public class TargetObject : MonoBehaviour
     public enum TargetMoveType
     {
         Nomal,
-        OutsideArea
+        OutsideArea,
+        ReverseSide,
+        ReverseLane
     }
     public enum EnchantmentStatus
     {
@@ -70,7 +73,8 @@ public class TargetObject : MonoBehaviour
 		{
 			OutsideAreaMove();
 		}
-		SlopeAdjust();
+        JustBeforeMove();
+        SlopeAdjust();
     }
 
     /// <summary>
@@ -123,11 +127,38 @@ public class TargetObject : MonoBehaviour
             default:
                 break;
         }
-        if(targetType==TargetType.Composite)
-            MeshExplosion.meshExplosion.Explode(transform, transform.position, -GetComponent<Rigidbody>().velocity);
+        if (targetType == TargetType.Composite)
+        {
+            StartCoroutine(CompositeBreakEvent());
+            return;
+        }
         //撃破時の処理をここに入れる//
         DestroyEvent();
 
+    }
+
+    IEnumerator CompositeBreakEvent()
+    {
+        isMove = false;
+        Vector3 m_burstAngle = new Vector3(0.1f, 0.5f, 60);
+        const float m_rotateSpeed = 50;
+        for(int i = 0; i < 30; i++)
+        {
+            transform.eulerAngles += Vector3.forward * m_rotateSpeed;
+            transform.position += m_burstAngle;
+            yield return null;
+        }
+        DestroyEvent();
+    }
+    
+    void JustBeforeMove()
+    {
+        const float m_moveRange = 35f;
+        if (targetMoveType == TargetMoveType.Nomal) return;
+        if (targetMoveType == TargetMoveType.OutsideArea) return;
+        if (transform.position.z > m_moveRange) return;
+        if (targetMoveType == TargetMoveType.ReverseLane) StartCoroutine(MoveReverseLane());
+        if (targetMoveType == TargetMoveType.ReverseSide) StartCoroutine(MoveReverseSide());
     }
 
     void PlayerAttackEvent()
@@ -193,10 +224,10 @@ public class TargetObject : MonoBehaviour
                 
 		if (targetMoveType == TargetMoveType.Nomal) testtrans.LookAt(m_stage); //自分の向きをターゲットの正面に向ける
         */
-
-		if (targetMoveType == TargetMoveType.OutsideArea)
+        spawnPosX = transform.position.x;
+        if (targetMoveType == TargetMoveType.OutsideArea)
 		{
-			outsidePos = transform.position;
+			
 
 			Vector3 m_pos = transform.position;
 
@@ -204,9 +235,9 @@ public class TargetObject : MonoBehaviour
 
 			transform.position = m_pos;
 		}
-
-		//transform.Rotate(new Vector3(0, 0, Random.Range(0, 360)), Space.World); //自分をZ軸を中心に0～360でランダムに回転させる
-	}
+        
+        //transform.Rotate(new Vector3(0, 0, Random.Range(0, 360)), Space.World); //自分をZ軸を中心に0～360でランダムに回転させる
+    }
 
     /// <summary>
     /// 協力ターゲットが存在する場合、色を変える処理
@@ -235,24 +266,27 @@ public class TargetObject : MonoBehaviour
 	/// </summary>
 	private void OutsideAreaMove()
 	{
-		if (!isMove) return;
-
-		if(outsideStartPos > 0)
+        
+        if (!isMove) return;
+        Debug.Log("OutsideAreaMove()");
+        if (outsideStartPos > 0)
 		{
             transform.position -= transform.right * PlaySceneManager.SceneManager.GetSpeed()*30;   // オブジェクトをステージに向かって動かす
             Debug.Log(PlaySceneManager.SceneManager.GetSpeed());
-            if (transform.position.x <= outsidePos.x)   //生成された位置のX座標になったら通常のオブジェクトの動きになる
+            if (transform.position.x <= spawnPosX)   //生成された位置のX座標になったら通常のオブジェクトの動きになる
 			{
-                transform.position = new Vector3(outsidePos.x, transform.position.y,transform.position.z);
+                transform.position = new Vector3(spawnPosX, transform.position.y,transform.position.z);
                 //targetMoveType = TargetMoveType.Nomal;
 			}
 		}
 		else if(outsideStartPos < 0)
 		{
             transform.position += transform.right * PlaySceneManager.SceneManager.GetSpeed()*30;
-            if (transform.position.x >= outsidePos.x)
+            Debug.Log(PlaySceneManager.SceneManager.GetSpeed());
+            if (transform.position.x >= spawnPosX)
 			{
-                transform.position = new Vector3(outsidePos.x, transform.position.y,transform.position.z);
+                Debug.Log(spawnPosX);
+                transform.position = new Vector3(spawnPosX, transform.position.y,transform.position.z);
                 //targetMoveType = TargetMoveType.Nomal;
 
 			}
@@ -323,7 +357,6 @@ public class TargetObject : MonoBehaviour
     /// <returns></returns>
     IEnumerator BaloonMoveIEnumerator()
     {
-        isMove = false;
         float m_movePosY = -2;
         for (int i = 0; i < 10; i++)
         {
@@ -333,6 +366,34 @@ public class TargetObject : MonoBehaviour
             yield return null;
         }
         GetComponent<BoxCollider>().enabled = true;
+        isMove = true;
+    }
+
+    IEnumerator MoveReverseSide()
+    {
+        Debug.Log("MoveReverseSide");
+        targetMoveType = TargetMoveType.Nomal;
+        const float m_moveTime = 0.7f;
+        isMove = false;
+        transform.DOMoveX(-spawnPosX, m_moveTime);
+        yield return new WaitForSeconds(m_moveTime);
+        isMove = true;
+        
+    }
+
+    IEnumerator MoveReverseLane()
+    {
+        isMove = false;
+        Debug.Log("MoveReverseLane");
+        targetMoveType = TargetMoveType.Nomal;
+        const float m_laneDifference = 5f;
+        const float m_moveTime = 0.7f;
+        isMove = false;
+        if (targetType==TargetType.OverArm)
+            transform.DOMoveY(transform.position.y-m_laneDifference, m_moveTime);
+        else if(targetType == TargetType.EnergyGun)
+            transform.DOMoveY(transform.position.y + m_laneDifference, m_moveTime);
+        yield return new WaitForSeconds(m_moveTime);
         isMove = true;
     }
 
@@ -350,7 +411,6 @@ public class TargetObject : MonoBehaviour
         else if (attackPlayerID == 1)
             if (targetType != TargetType.OverArm) return false;
         else return false;
-        Debug.Log(targetMoveType);
 		if(targetMoveType == TargetMoveType.OutsideArea){
             PresentBaloonDamageEvent ();
 			return true;

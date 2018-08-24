@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class FloorMove : MonoBehaviour {
-	const float spawnRotate = 50f;
-	const float returnRotate = -18;
+	const float spawnRotate = 40f;
+	const float returnRotate =-18;
 	const float speedAdjust = 6;
 
 	float nowRotateX = 0;
@@ -16,12 +16,12 @@ public class FloorMove : MonoBehaviour {
 	void Update () {
 		nowRotateX = RotateAdjust (nowRotateX);
 		if (ReturnRotateCheck (nowRotateX))
-			nowRotateX = spawnRotate;
+			nowRotateX = spawnRotate+ (returnRotate- nowRotateX);
 		FloorRotate();
 	}
 
 	void FloorRotate(){
-		nowRotateX += PlaySceneManager.SceneManager.GetSpeed() * speedAdjust;
+		nowRotateX += PlaySceneManager.SceneManager.GetSpeed()*speedAdjust;
 		transform.eulerAngles = Vector3.right*nowRotateX;
 	}
 	
@@ -38,7 +38,7 @@ public class FloorMove : MonoBehaviour {
 
 
 	bool ReturnRotateCheck(float rotate){
-		if (rotate <= returnRotate)
+		if (rotate < returnRotate)
 			return true;
 		else
 			return false;

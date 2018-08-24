@@ -16,13 +16,14 @@ public class HomingBullet : MonoBehaviour {
     [SerializeField]
     private GameObject effect;
 
-    private const float speed = 50;
+    private const float speed = 120;
     float firstPosZ;
 	Vector3 centerPos;
 
 
     private void Start()
     {
+        Destroy(gameObject,0.35f);
         firstPosZ = transform.position.z;
     }
     void Update () {
@@ -33,6 +34,7 @@ public class HomingBullet : MonoBehaviour {
     void BulletMove()
     {
         if (!isMove) return;
+        if(homingTransform)transform.LookAt(homingTransform);
         thisRigidbody.velocity = transform.forward * speed;
 }
 

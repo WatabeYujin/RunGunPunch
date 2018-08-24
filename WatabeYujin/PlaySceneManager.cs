@@ -27,9 +27,9 @@ public class PlaySceneManager : MonoBehaviour
     [SerializeField]
     private AudioClip compositeSE;
     [SerializeField]
-    private Text energyComandText;
+    private Text[] comandOK = new Text[2];
     [SerializeField]
-    private Text overComandText;
+    private Image[] commandAllow = new Image[2];
     [SerializeField]
     private yazirusimove[] yazi=new yazirusimove[2];
     [SerializeField]
@@ -77,7 +77,7 @@ public class PlaySceneManager : MonoBehaviour
     public float GetSpeed()
     {
         if (condition == Condition.Composite)
-            return speed / 50;
+            return speed / 100;
         return speed / 10;
     }
     void ReverseTime()
@@ -231,32 +231,31 @@ public class PlaySceneManager : MonoBehaviour
 
     public void ComandView(int comand,int playerID)
     {
-        string m_viewText = "";
         switch (comand)
         {
             case 0:
-                m_viewText = "OK！";
+                comandOK[playerID].enabled = true;
+                commandAllow[playerID].enabled = false;
                 break;
             case 1:
-                m_viewText = "←";
+                commandAllow[playerID].enabled = true;
+                comandOK[playerID].enabled = false;
+                commandAllow[playerID].transform.eulerAngles = Vector3.forward * 90;
                 break;
             case 2:
-                m_viewText = "↓";
+                commandAllow[playerID].enabled = true;
+                comandOK[playerID].enabled = false;
+                commandAllow[playerID].transform.eulerAngles = Vector3.zero;
                 break;
             case 3:
-                m_viewText = "→";
+                commandAllow[playerID].enabled = true;
+                comandOK[playerID].enabled = false;
+                commandAllow[playerID].transform.eulerAngles = Vector3.forward * -90;
                 break;
             default:
-                m_viewText = "";
+                commandAllow[playerID].enabled = false;
+                comandOK[playerID].enabled = false;
                 break;
-        }
-        if (playerID == 0)
-        {
-            energyComandText.text = m_viewText;
-        }
-        else
-        {
-            overComandText.text = m_viewText;
         }
     }
 
