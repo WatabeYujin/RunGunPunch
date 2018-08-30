@@ -110,14 +110,9 @@ public class SetUp : MonoBehaviour {
     /// </summary>
     void JoyConStraight()
     {
-        
         if (ReadyCheck()) return;
         indexText.text = "Joy-Con(c)をタテににぎって！";
-        /*
-        player1ready = true;
-        player2ready = true;
-        if (ReadyCheck()) return;
-        */
+        StraightTimeCheck();
     }
 
     IEnumerator PrintSuccess()
@@ -211,12 +206,14 @@ public class SetUp : MonoBehaviour {
 
     bool StraightCheck(int playerID)
     {
-        const float m_allowableValue = 0.7f;
+        const float m_allowableValue = 0.25f;
         Vector3 m_checkValue;
         if (playerID == 0)
             m_checkValue = joyConControl.AccelerationGet(Hand.Left);
-        else 
+        else
             m_checkValue = joyConControl.AccelerationGet(Hand.Right);
+        m_checkValue += Vector3.up;
+        debugvalue[playerID] = m_checkValue;
         if (Mathf.Abs(m_checkValue.x) > m_allowableValue) return false;
         if (Mathf.Abs(m_checkValue.y) > m_allowableValue) return false;
         if (Mathf.Abs(m_checkValue.z) > m_allowableValue) return false;
