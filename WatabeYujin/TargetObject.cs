@@ -26,8 +26,10 @@ public class TargetObject : MonoBehaviour
     [SerializeField]
     private Transform presentbox;
 	public const float angle = 5.0f; //一秒当たりの回転角度
-    private yazirusimove[] yazi = new yazirusimove[2];
+    [SerializeField]
+    private BossType bossType;//協力ターゲットの種類
 
+    private yazirusimove[] yazi = new yazirusimove[2];
     public int compositeCommand1Player = 0;//ボス用のコマンド入力
     public int compositeCommand2Player = 0;//左=1,縦=2,右=3　（例）左左右縦の場合1132
     private Transform testtrans;
@@ -53,6 +55,13 @@ public class TargetObject : MonoBehaviour
     {
         None = 0,
         Reverse = 1,
+    }
+    public enum BossType
+    {
+        None,
+        Tree,
+        Door,
+        Rocket
     }
     ////////////////////////////////////////////////////////////////////////////////////
 	void Start(){
@@ -139,16 +148,54 @@ public class TargetObject : MonoBehaviour
 
     IEnumerator CompositeBreakEvent()
     {
+        
+        const float m_bustTime =2;
+        const float m_slowTimeSpeed = 0.1f;
+        const float m_zoom = 35;
+
         isMove = false;
-        Vector3 m_burstAngle = new Vector3(0.1f, 0.5f, 60);
-        const float m_rotateSpeed = 50;
-        for(int i = 0; i < 30; i++)
+        Camera m_mainCamera = Camera.main;
+        Quaternion m_cameraquaternion = m_mainCamera.transform.rotation;
+        float m_defaltFieldview = m_mainCamera.fieldOfView;
+        switch (bossType)
         {
-            transform.eulerAngles += Vector3.forward * m_rotateSpeed;
-            transform.position += m_burstAngle;
-            yield return null;
+            case BossType.Tree:
+                TreeBreak(m_bustTime);
+                break;
+            case BossType.Door:
+                break;
+            case BossType.Rocket:
+                break;
+            default:
+                break;
         }
+        m_mainCamera.transform.LookAt(transform.position + (Vector3.up * 7f));
+        Quaternion m_mainCameraRotation = m_mainCamera.transform.rotation;
+        Time.timeScale = m_slowTimeSpeed;
+        m_mainCamera.fieldOfView = m_zoom;
+        yield return new WaitForSeconds(0.1f);
+        m_mainCamera.transform.rotation = m_cameraquaternion;
+        Time.timeScale = 1f;
+        PlaySceneManager.SceneManager.GetSetNowCondition =
+                PlaySceneManager.Condition.None;
+        PlaySceneManager.SceneManager.BGMisPlay(true);
+        ComandView(0, false);
+        ComandView(1, false);
+        m_mainCamera.fieldOfView = m_defaltFieldview;
+        yield return new WaitForSeconds(m_bustTime);
         DestroyEvent();
+    }
+
+    void TreeBreak(float bustTime)
+    {
+        Vector3 m_burstAngle = new Vector3(5f, 30f, 1000f);
+        Sequence m_sequence = DOTween.Sequence();
+        m_sequence.Append(
+            transform.DOLocalMove(m_burstAngle, bustTime).SetEase(Ease.Linear)
+        );
+        m_sequence.Join(
+            transform.DORotate(new Vector3(0, 0, 3600), bustTime).SetRelative().SetEase(Ease.Linear)
+        );
     }
     
     void JustBeforeMove()
@@ -179,14 +226,6 @@ public class TargetObject : MonoBehaviour
     {
         isMove = false;
         EffectSpawn();
-        if (targetType == TargetType.Composite)
-        {
-            PlaySceneManager.SceneManager.GetSetNowCondition =
-                PlaySceneManager.Condition.None;
-            PlaySceneManager.SceneManager.BGMisPlay(true);
-            ComandView(0, false);
-            ComandView(1, false);
-        }
         //if (targetType == TargetType.Composite)
         Destroy(gameObject);
     }
@@ -227,7 +266,6 @@ public class TargetObject : MonoBehaviour
         spawnPosX = transform.position.x;
         if (targetMoveType == TargetMoveType.OutsideArea)
 		{
-			
 
 			Vector3 m_pos = transform.position;
 
