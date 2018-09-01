@@ -17,6 +17,14 @@ public class SetUp : MonoBehaviour {
     private Text[] readyTexts = new Text[2];
     [SerializeField]
     private Image[] indicatorImage = new Image[2];
+    [SerializeField]
+    private RectTransform[] selectImage = new RectTransform[2];
+    [SerializeField]
+    private GameObject tutorialMenu;
+    [SerializeField]
+    private SceneMove sceneMove;
+    [SerializeField]
+    private GameObject maingame;
 
     private bool player1ready = false;
     private bool player2ready = false;
@@ -24,6 +32,7 @@ public class SetUp : MonoBehaviour {
     Vector3[] debugvalue = new Vector3[2];
     private int startIndexFontSize;
     private bool isRaadyRun = true;
+    bool[] tutorialSkip = new bool[2];
 
     void Start () {
         startIndexFontSize = indexText.fontSize;
@@ -62,7 +71,7 @@ public class SetUp : MonoBehaviour {
     void JoyconReadyCheck()
     {
         if (ReadyCheck()) return;
-        indexText.text = "ZRボタン・ZLボタンをおしてね！";
+        indexText.text = "ZRボタン・ZLボタンをおしてクダサイ";
         if (!player1ready)
         {
             if (joyConControl.ButtonGet(nn.hid.NpadButton.ZL))
@@ -89,7 +98,7 @@ public class SetUp : MonoBehaviour {
         const float m_readyShakePower = 100;
         IndicatorView(m_readyShakePower);
         if (ReadyCheck()) return;
-        indexText.text = "Joy-Con(c)をふってみて！";
+        indexText.text = "Joy-Con(c)をふってクダサイ";
         ShakePowerCheck();
         if (!player1ready)
         {
@@ -115,7 +124,7 @@ public class SetUp : MonoBehaviour {
     void JoyConStraight()
     {
         if (ReadyCheck()) return;
-        indexText.text = "Joy-Con(c)をタテににぎって！";
+        indexText.text = "Joy-Con(c)をタテににぎってクダサイ";
         StraightTimeCheck();
     }
 
@@ -145,7 +154,7 @@ public class SetUp : MonoBehaviour {
             indexText.fontSize++;
             yield return null;
         }
-        
+        if (phase == 3) tutorialMenu.SetActive(true);
     }
 
     /// <summary>
@@ -179,7 +188,6 @@ public class SetUp : MonoBehaviour {
 
     IEnumerator TextPopUp(Text text)
     {
-        Debug.Log("呼ばれた");
         text.fontSize += 10;
         for (int i = 0; i < 10; i++)
         {
@@ -195,7 +203,65 @@ public class SetUp : MonoBehaviour {
 
     void TutorialCheck()
     {
+        indexText.text = "チュートリアルをプレイしマスカ？";
+        if (joyConControl.ButtonGet(nn.hid.NpadButton.ZL,Style.Down))
+        {
+            player1ready = !player1ready;
+            Readyindex(0, !player1ready);
+        }
+        if (joyConControl.ButtonGet(nn.hid.NpadButton.ZR,Style.Down))
+        {
+            player2ready = !player2ready;
+            Readyindex(1, !player2ready);
+        }
+        if (player1ready && player2ready)
+        {
+            if (tutorialSkip[0] != tutorialSkip[1]) return;
+            if (tutorialSkip[0])
+                StartCoroutine(MainGameStart());
+            else
+                TutorialStart();
+        }
+#if UNITY_EDITOR
+        if (Input.GetKeyDown(KeyCode.LeftArrow))
+            TutorialSelected(1, false);
+        else if (Input.GetKeyDown(KeyCode.RightArrow))
+            TutorialSelected(1, true);
+        if (Input.GetKeyDown(KeyCode.A))
+            TutorialSelected(0, false);
+        else if (Input.GetKeyDown(KeyCode.D))
+            TutorialSelected(0, true);
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            player1ready = !player1ready;
+            Readyindex(0, player1ready);
+        }
+        if (Input.GetKeyDown(KeyCode.KeypadEnter))
+        {
+            player2ready = !player2ready;
+            Readyindex(1, player2ready);
+        }
+#endif
+    }
 
+    public void TutorialSelected(int playerID,bool isSkip)
+    {
+        float[] m_skipPosX = new float[2] { 207, 193 };
+        float[] m_notSkipPosX = new float[2] { -177, -193 };
+        const float m_posY = 0;
+        if (phase != 3) return;
+        if (playerID == 0 && player1ready==true) return;
+        if (playerID == 1 && player2ready == true) return;
+        switch (isSkip)
+        {
+            case true:
+                selectImage[playerID].localPosition = new Vector2(m_skipPosX[playerID], m_posY);
+                break;
+            case false:
+                selectImage[playerID].localPosition = new Vector2(m_notSkipPosX[playerID], m_posY);
+                break;
+        }
+        tutorialSkip[playerID] = isSkip;
     }
 
     void ShakePowerCheck()
@@ -276,5 +342,20 @@ public class SetUp : MonoBehaviour {
             playervalue[0] += Time.deltaTime;
         if (Input.GetKey(KeyCode.RightShift))
             playervalue[1] += Time.deltaTime;
+    }
+
+    IEnumerator MainGameStart()
+    {
+        phase++;
+        const float m_fadeTime = 1f;
+        sceneMove.FadeInEvent();
+        yield return new WaitForSeconds(m_fadeTime);
+        
+        maingame.SetActive(true);
+        gameObject.SetActive(false);
+    }
+    void TutorialStart()
+    {
+
     }
 }
