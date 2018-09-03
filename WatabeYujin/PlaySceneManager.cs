@@ -27,9 +27,11 @@ public class PlaySceneManager : MonoBehaviour
     [SerializeField]
     private AudioClip compositeSE;
     [SerializeField]
-    private Text[] comandOK = new Text[2];
+    private Text[] commandOK = new Text[2];
     [SerializeField]
     private Image[] commandAllow = new Image[2];
+    [SerializeField]
+    private GameObject[] floorObj = new GameObject[3];
     [SerializeField]
     private yazirusimove[] yazi=new yazirusimove[2];
     [SerializeField]
@@ -37,12 +39,14 @@ public class PlaySceneManager : MonoBehaviour
 
     static public PlaySceneManager SceneManager;
     private Color baseColor;
-    private int score;
     private int combo;
     private float elapsedTime = 0;
 	private bool BGMPlay = true;
 	private int seID=0;
     private int countUpScore;
+    private int floorLevel = 0;
+
+    static int oneGameTotalScore;
 
     public enum Condition
     {
@@ -55,6 +59,7 @@ public class PlaySceneManager : MonoBehaviour
     {
         SceneManager = this;
         Application.targetFrameRate = 60;           //目標FPSを60に設定
+        oneGameTotalScore = 0;
         baseColor = directionalLight.color;
     }
     void Update()
@@ -66,7 +71,7 @@ public class PlaySceneManager : MonoBehaviour
 
     void ScoreView()
     {
-        scoreText.text = "Score：" + score;
+        scoreText.text = "Score：" + oneGameTotalScore;
     }
     void ComboView()
     {
@@ -104,7 +109,7 @@ public class PlaySceneManager : MonoBehaviour
     {
         for(; countUpScore > 0; countUpScore--)
         {
-            score++;
+            oneGameTotalScore++;
             ScoreView();
             yield return null;
         }
@@ -229,35 +234,43 @@ public class PlaySceneManager : MonoBehaviour
         if (seID >= 3) seID = 0;
     }
 
-    public void ComandView(int comand,int playerID)
+    public void CommandView(int command,int playerID)
     {
-        switch (comand)
+        switch (command)
         {
             case 0:
-                comandOK[playerID].enabled = true;
+                commandOK[playerID].enabled = true;
                 commandAllow[playerID].enabled = false;
                 break;
             case 1:
                 commandAllow[playerID].enabled = true;
-                comandOK[playerID].enabled = false;
+                commandOK[playerID].enabled = false;
                 commandAllow[playerID].transform.eulerAngles = Vector3.forward * 90;
                 break;
             case 2:
                 commandAllow[playerID].enabled = true;
-                comandOK[playerID].enabled = false;
+                commandOK[playerID].enabled = false;
                 commandAllow[playerID].transform.eulerAngles = Vector3.zero;
                 break;
             case 3:
                 commandAllow[playerID].enabled = true;
-                comandOK[playerID].enabled = false;
+                commandOK[playerID].enabled = false;
                 commandAllow[playerID].transform.eulerAngles = Vector3.forward * -90;
                 break;
             default:
                 commandAllow[playerID].enabled = false;
-                comandOK[playerID].enabled = false;
+                commandOK[playerID].enabled = false;
                 break;
         }
     }
 
-
+    public void FloorLevelUp()
+    {
+        if (floorLevel <= 2)
+        {
+            floorObj[floorLevel].SetActive(false);
+            floorLevel++;
+            floorObj[floorLevel].SetActive(true);
+        }
+    }
 }
