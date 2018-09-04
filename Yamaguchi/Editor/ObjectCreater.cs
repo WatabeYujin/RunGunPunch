@@ -46,10 +46,7 @@ public class ObjectCreater : EditorWindow {
         
         parent = EditorGUILayout.ObjectField("Parent", parent, typeof(GameObject),true) as GameObject;
 
-        if (parent != null)
-        {
-            pos = parent.transform.position;
-        }
+        
         
         GUILayout.Space(20.0f);
 
@@ -101,6 +98,8 @@ public class ObjectCreater : EditorWindow {
     {
         GUILayout.Label("Generation position : ", EditorStyles.boldLabel);
 
+        
+
         EditorGUILayout.BeginVertical(EditorStyles.helpBox);
         for (int i = column; i > 0; i--)
         {
@@ -109,12 +108,13 @@ public class ObjectCreater : EditorWindow {
             {
                 if (GUILayout.Button(""))
                 {
-                    pos.x = j * range;      //障害物のX方向の間隔の設定
+                    pos = parent.transform.position;
+                    pos.x += j * range;      //障害物のX方向の間隔の設定
 
-                    pos.y = i * range;      //障害物のY方向の間隔の設定
+                    pos.y += i * range;      //障害物のY方向の間隔の設定
 
                     //if (j == 2) pos.y = i * 3 + 1;
-                  
+                    Debug.Log(pos);
                 }
             }
             GUILayout.EndHorizontal();
@@ -129,15 +129,15 @@ public class ObjectCreater : EditorWindow {
     private void Create()
     {
         if (prefabs[0] == null) return;
-        
 
+        
         //オブジェクト間の角度差
         float angleDiff = 180f / (float)numZ;
 
         //各オブジェクトを円状に配置
         for (int i = 0; i < numZ; i++)
         {
-            pos = parent.transform.position;
+            
 
             float angle = (90 - angleDiff * i) * Mathf.Deg2Rad;
             pos.y -= radius * Mathf.Cos(angle);
