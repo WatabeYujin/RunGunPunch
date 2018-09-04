@@ -28,6 +28,7 @@ public class TargetObject : MonoBehaviour
 	public const float angle = 5.0f; //一秒当たりの回転角度
     [SerializeField]
     private BossType bossType;//協力ターゲットの種類
+    
 
     private yazirusimove[] yazi = new yazirusimove[2];
     public int compositeCommand1Player = 0;//ボス用のコマンド入力
@@ -37,6 +38,7 @@ public class TargetObject : MonoBehaviour
     private RaycastHit hit;
     private float spawnPosX; //オブジェクトの生成された際のx軸
     private bool isMove = true;     //移動しているか否か
+
     
     public enum TargetType         //ターゲットの種類
     {
@@ -163,8 +165,10 @@ public class TargetObject : MonoBehaviour
                 TreeBreak(m_bustTime);
                 break;
             case BossType.Door:
+                DoorOpen(m_bustTime);
                 break;
             case BossType.Rocket:
+                RocketBreak(m_bustTime);
                 break;
             default:
                 break;
@@ -197,7 +201,14 @@ public class TargetObject : MonoBehaviour
             transform.DORotate(new Vector3(0, 0, 3600), bustTime).SetRelative().SetEase(Ease.Linear)
         );
     }
-    
+    void DoorOpen(float bustTime)
+    {
+    }
+    void RocketBreak(float bustTime)
+    {
+        
+    }
+
     void JustBeforeMove()
     {
         const float m_moveRange = 35f;
@@ -226,7 +237,14 @@ public class TargetObject : MonoBehaviour
     {
         isMove = false;
         EffectSpawn();
-        //if (targetType == TargetType.Composite)
+        if (targetType == TargetType.Composite)
+        {
+            PlaySceneManager.SceneManager.GetSetNowCondition =
+                PlaySceneManager.Condition.None;
+            PlaySceneManager.SceneManager.CommandView(-1, 0);
+            PlaySceneManager.SceneManager.CommandView(-1, 1);
+            PlaySceneManager.SceneManager.FloorLevelUp();
+        }
         Destroy(gameObject);
     }
 
@@ -362,7 +380,7 @@ public class TargetObject : MonoBehaviour
     {
         if (!view)
         {
-            PlaySceneManager.SceneManager.ComandView(-1, playerID);
+            PlaySceneManager.SceneManager.CommandView(-1, playerID);
             return;
         }
         int m_viewComand = 0;
@@ -370,7 +388,7 @@ public class TargetObject : MonoBehaviour
             m_viewComand = compositeCommand1Player % 10;
         else
             m_viewComand = compositeCommand2Player % 10;
-        PlaySceneManager.SceneManager.ComandView(m_viewComand, playerID);
+        PlaySceneManager.SceneManager.CommandView(m_viewComand, playerID);
     }
 
 	void ScoreEvent(){

@@ -9,6 +9,8 @@ using UnityEngine.SceneManagement;
 public class AccelerationInput : MonoBehaviour
 {
     [SerializeField]
+    private SetUp setUp;
+    [SerializeField]
     JoyConControl GetInput;
     /// <summary>accelerationのサンプルを入れる配列</summary>
     Vector3[,] accelerationKeep = new Vector3[2, 10];
@@ -31,12 +33,16 @@ public class AccelerationInput : MonoBehaviour
     [SerializeField]
     Text[] controlValueText = new Text[2];
 
+
 	[SerializeField]
     float[] m_controlValue_z = new float[2] { 3.5f, 3.5f };
 	[SerializeField]
 	float[] m_controlValue_y = new float[2] { 3.5f, 3.5f };
 	[SerializeField]
 	float[] y_shake_range = new float[2] { 3.5f, 3.5f };
+
+    [SerializeField]
+    private int mode=0;
 
     void Start()
     {
@@ -122,6 +128,7 @@ public class AccelerationInput : MonoBehaviour
             if (Mathf.Abs(m_acceleration[handNum].y) >= m_controlValue_y[handNum] &&
                 Mathf.Abs(m_acceleration[handNum].z) < y_shake_range[handNum])
             {
+                if (mode != 1) return;
                 //縦の判定
                 roboCon.Attack(handNum, RobotControl.Lane.Center);
                 StartCoroutine(DelayTime());
@@ -131,14 +138,27 @@ public class AccelerationInput : MonoBehaviour
             {
                 if (m_acceleration[handNum].z >= 0)
                 {
-                    roboCon.Attack(handNum, RobotControl.Lane.Right);
-                    StartCoroutine(DelayTime());
+                    if (mode == 1)
+                    {
+                        roboCon.Attack(handNum, RobotControl.Lane.Right);
+                        StartCoroutine(DelayTime());
+                    }else if(mode == 0)
+                    {
+                        setUp.TutorialSelected(handNum, false);
+                    }
                 }
                 else
                 {
-                    roboCon.Attack(handNum, RobotControl.Lane.Left);
+                    if (mode == 1)
+                    {
+                        roboCon.Attack(handNum, RobotControl.Lane.Left);
                     StartCoroutine(DelayTime());
-                }
+                    }
+                    else if (mode == 0)
+                    {
+                        setUp.TutorialSelected(handNum, true);
+                    }
+            }
             }
         }
     }
