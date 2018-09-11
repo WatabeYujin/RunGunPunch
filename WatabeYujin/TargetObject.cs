@@ -21,14 +21,15 @@ public class TargetObject : MonoBehaviour
     private EnchantmentStatus enchantmentStatus;
 	[SerializeField]
 	private float outsideStartPos = 100.0f; //画面外から来るオブジェクトが生成されてから移動する値
-	[SerializeField]
-	private Transform stage;   //ステージのオブジェクト
     [SerializeField]
     private Transform presentbox;
 	public const float angle = 5.0f; //一秒当たりの回転角度
     [SerializeField]
     private BossType bossType;//協力ターゲットの種類
-    
+    [SerializeField]
+    private Material skyBox;
+    [SerializeField]
+    private Animator anim;
 
     private yazirusimove[] yazi = new yazirusimove[2];
     public int compositeCommand1Player = 0;//ボス用のコマンド入力
@@ -74,7 +75,7 @@ public class TargetObject : MonoBehaviour
         }
         transform.eulerAngles = new Vector3(0, 180, 0);
 		FirstTargetPositionGet ();
-	}
+    }
 
     void Update()
     {
@@ -150,9 +151,8 @@ public class TargetObject : MonoBehaviour
 
     IEnumerator CompositeBreakEvent()
     {
+        const float m_bustTime = 2;
         
-        const float m_bustTime =2;
-        const float m_slowTimeSpeed = 0.1f;
         const float m_zoom = 35;
 
         isMove = false;
@@ -173,25 +173,27 @@ public class TargetObject : MonoBehaviour
             default:
                 break;
         }
-        m_mainCamera.transform.LookAt(transform.position + (Vector3.up * 7f));
+    m_mainCamera.transform.LookAt(transform.position + (Vector3.up * 7f));
         Quaternion m_mainCameraRotation = m_mainCamera.transform.rotation;
-        Time.timeScale = m_slowTimeSpeed;
+        
         m_mainCamera.fieldOfView = m_zoom;
         yield return new WaitForSeconds(0.1f);
         m_mainCamera.transform.rotation = m_cameraquaternion;
-        Time.timeScale = 1f;
+        
         PlaySceneManager.SceneManager.GetSetNowCondition =
                 PlaySceneManager.Condition.None;
         PlaySceneManager.SceneManager.BGMisPlay(true);
         ComandView(0, false);
         ComandView(1, false);
         m_mainCamera.fieldOfView = m_defaltFieldview;
-        yield return new WaitForSeconds(m_bustTime);
+        yield return new WaitForSeconds(2);
         DestroyEvent();
     }
 
     void TreeBreak(float bustTime)
     {
+        const float m_slowTimeSpeed = 0.1f;
+        Time.timeScale = m_slowTimeSpeed;
         Vector3 m_burstAngle = new Vector3(5f, 30f, 1000f);
         Sequence m_sequence = DOTween.Sequence();
         m_sequence.Append(
@@ -200,13 +202,27 @@ public class TargetObject : MonoBehaviour
         m_sequence.Join(
             transform.DORotate(new Vector3(0, 0, 3600), bustTime).SetRelative().SetEase(Ease.Linear)
         );
+        Time.timeScale = 1f;
     }
     void DoorOpen(float bustTime)
     {
+        Vector3 m_playerPos = Vector3.forward * -3.5f;
+        MeshExplosion.meshExplosion.Explode(transform, m_playerPos, transform.forward,90);
+        transform.GetComponent<MeshRenderer>().enabled = false;
     }
     void RocketBreak(float bustTime)
     {
-        
+        const float m_slowTimeSpeed = 0.1f;
+        Time.timeScale = m_slowTimeSpeed;
+        Vector3 m_burstAngle = new Vector3(5f, 30f, 1000f);
+        Sequence m_sequence = DOTween.Sequence();
+        m_sequence.Append(
+            transform.DOLocalMove(m_burstAngle, bustTime).SetEase(Ease.Linear)
+        );
+        m_sequence.Join(
+            transform.DORotate(new Vector3(0, 0, 3600), bustTime).SetRelative().SetEase(Ease.Linear)
+        );
+        Time.timeScale = 1f;
     }
 
     void JustBeforeMove()
@@ -235,6 +251,7 @@ public class TargetObject : MonoBehaviour
     /// </summary>
     void DestroyEvent()
     {
+        
         isMove = false;
         EffectSpawn();
         if (targetType == TargetType.Composite)
@@ -244,6 +261,8 @@ public class TargetObject : MonoBehaviour
             PlaySceneManager.SceneManager.CommandView(-1, 0);
             PlaySceneManager.SceneManager.CommandView(-1, 1);
             PlaySceneManager.SceneManager.FloorLevelUp();
+            if(bossType==BossType.Rocket)PlaySceneManager.SceneManager.GameClear();
+            if (skyBox != null) RenderSettings.skybox = skyBox;
         }
         Destroy(gameObject);
     }
@@ -413,12 +432,15 @@ public class TargetObject : MonoBehaviour
     /// <returns></returns>
     IEnumerator BaloonMoveIEnumerator()
     {
-        float m_movePosY = -2;
-        for (int i = 0; i < 10; i++)
+        float m_movePosY = -2.3f;
+        isMove = false;
+        for (int i = 0; i < 30; i++)
         {
+
             Vector3 m_axis = transform.TransformDirection(Vector3.right);
-            transform.RotateAround(stagePos, m_axis, angle * PlaySceneManager.SceneManager.GetSpeed() * 3); // オブジェクトの回転
-            transform.position += Vector3.up * m_movePosY / 10;
+            transform.RotateAround(stagePos, m_axis, angle * PlaySceneManager.SceneManager.GetSpeed()); // オブジェクトの回転
+            transform.eulerAngles = new Vector3(0, 180, 0);
+            transform.position += Vector3.up * m_movePosY / 30;
             yield return null;
         }
         GetComponent<BoxCollider>().enabled = true;
@@ -471,7 +493,10 @@ public class TargetObject : MonoBehaviour
             PresentBaloonDamageEvent ();
 			return true;
 		}
-		TargetBreak();
+        isMove = false;
+        PlaySceneManager.SceneManager.SEPlay(breakSE);
+        if (anim != null) StartCoroutine(DeadAnim());
+        else TargetBreak();
 		return true;
     }
 
@@ -500,11 +525,17 @@ public class TargetObject : MonoBehaviour
         TargetBreak();
     }
 
-    public void StageCenterSet(Transform obj)
+    IEnumerator DeadAnim()
     {
-        stage = obj;
-        FirstTargetPositionGet();
+        const string m_deadName = "Dead";
+        Vector3 m_rotate = new Vector3(-90,180,0);
+        const float m_rotateSpeed = 0.7f;
+        anim.SetTrigger(m_deadName);
+        transform.DORotate(m_rotate, m_rotateSpeed);
+        yield return new WaitForSeconds(m_rotateSpeed);
+        TargetBreak();
     }
+    
 
     public void BaloonMove()
     {
