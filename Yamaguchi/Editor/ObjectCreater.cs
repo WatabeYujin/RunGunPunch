@@ -12,7 +12,7 @@ public class ObjectCreater : EditorWindow {
     private GameObject parent;                                      // 障害物の親のオブジェクト
     private List<GameObject> prefabs = new List<GameObject>();      // 生成するプレファブ
     private GameObject tObj = null;                                 // listに入れておく変数
-    private int numZ = 1;                                           // Z軸に生成するオブジェクトの数
+    private int numZ = 10;                                           // Z軸に生成するオブジェクトの数
 
     private const int row = 3;                                      // 障害物の行
     private const int column = 2;                                   // 障害物の列
@@ -23,9 +23,9 @@ public class ObjectCreater : EditorWindow {
     private const int range = 3;                                    // 障害物の全体の範囲
 
     private GameObject stage;
-    private float radius = 130.0f;
+    private float radius = 65.0f;
 
-    string s = "parent : 生成するオブジェクトの親になるオブジェクト\n\nnum : 生成するオブジェクトの個数\n\ninterval : 生成するオブジェクトの間隔\n\nPrefabName : 保存するプレファブの名前\n";
+    string s = "parent : 生成するオブジェクトの親になるオブジェクト\n\nPrefabName : 保存するプレファブの名前\n";
 /// ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -45,12 +45,6 @@ public class ObjectCreater : EditorWindow {
         EditorGUILayout.Space();
         
         parent = EditorGUILayout.ObjectField("Parent", parent, typeof(GameObject),true) as GameObject;
-
-        
-        
-        GUILayout.Space(20.0f);
-
-        numZ = int.Parse(EditorGUILayout.TextField("num", numZ.ToString()));                                // 生成するオブジェクトの数を設定
         
         GUILayout.Space(20.0f);
 
@@ -112,9 +106,6 @@ public class ObjectCreater : EditorWindow {
                     pos.x += j * range;      //障害物のX方向の間隔の設定
 
                     pos.y += i * range;      //障害物のY方向の間隔の設定
-
-                    //if (j == 2) pos.y = i * 3 + 1;
-                    Debug.Log(pos);
                 }
             }
             GUILayout.EndHorizontal();
