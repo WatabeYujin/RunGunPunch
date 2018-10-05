@@ -9,8 +9,10 @@ public class EnemySpawn : MonoBehaviour {
     private float spawnInterval = 100;          //スポーンを行う間隔
     [SerializeField]
     private Transform spawnPosition;            //prefubをスポーンさせる位置
-
-    private float timeCount;                    //経過時間をカウント、スポーン毎に0になる。
+    [SerializeField]
+    private Transform center;
+ 
+    private float timeCount=0;                    //経過時間をカウント、スポーン毎に0になる。
     private bool isGameActive = true;           //ゲームが動いているか
     private int spawnCount = 0;                 //スポーンを行った回数
 
@@ -54,11 +56,12 @@ public class EnemySpawn : MonoBehaviour {
     /// <returns>スポーンできた場合true,できなかった場合falseを返す</returns>
     bool SpawnEvent()
     {
-        if (spawnCount > spawnPrefub.Count) return false;
+        if (spawnCount > spawnPrefub.Count-1) return false;
         if (!spawnPrefub[spawnCount]) return false;
         
         GameObject spawnObj = Instantiate(spawnPrefub[spawnCount]);
-        spawnObj.transform.position = spawnPosition.position;
+        //spawnObj.transform.position = spawnPosition.position+Vector3.forward*10;
+        Destroy(spawnObj, spawnInterval*1.5f);
         spawnCount++;
         return true;
     }

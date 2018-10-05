@@ -4,10 +4,12 @@ using UnityEngine;
 
 public class FloorMove : MonoBehaviour {
 	const float spawnRotate = 40f;
-	const float returnRotate =-18;
-	const float speedAdjust = 6;
+	const float returnRotate =-23f;
+	const float speedAdjust =5;
+    [SerializeField]
+    private bool mode=true;
 
-	float nowRotateX = 0;
+	float nowRotateX = 0f;
 
 	void Awake(){
 		nowRotateX = transform.eulerAngles.x;
@@ -16,13 +18,16 @@ public class FloorMove : MonoBehaviour {
 	void Update () {
 		nowRotateX = RotateAdjust (nowRotateX);
 		if (ReturnRotateCheck (nowRotateX))
-			nowRotateX = spawnRotate+ (returnRotate- nowRotateX);
+			nowRotateX = spawnRotate+ (nowRotateX- returnRotate);
 		FloorRotate();
 	}
 
 	void FloorRotate(){
-		nowRotateX += PlaySceneManager.SceneManager.GetSpeed()*speedAdjust;
-		transform.eulerAngles = Vector3.right*nowRotateX;
+        float m_speed = -0.5f;
+        if (mode) nowRotateX += PlaySceneManager.SceneManager.GetSpeed() * speedAdjust;
+        //if (mode) nowRotateX += PlaySceneManager.SceneManager.GetSpeed();
+        else nowRotateX += m_speed;
+        transform.eulerAngles = Vector3.right*nowRotateX;
 	}
 	
 	/// <summary>
@@ -38,7 +43,7 @@ public class FloorMove : MonoBehaviour {
 
 
 	bool ReturnRotateCheck(float rotate){
-		if (rotate < returnRotate)
+		if (rotate <= returnRotate)
 			return true;
 		else
 			return false;

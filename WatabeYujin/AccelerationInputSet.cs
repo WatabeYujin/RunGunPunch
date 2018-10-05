@@ -5,22 +5,10 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
-public class RankingDeta
-{
-    public string[] name1 = new string[5];
-    public string[] name2 = new string[5];
-    public int[] score = new int[5];
-}
+
 public class AccelerationInputSet : MonoBehaviour
 {
-    string[] name1 = { "AAA", "BBB", "CCC", "DDD", "EEE" };
-    string[] name2 = { "FFF", "GGG", "HHH", "III", "JJJ" };
-    int[] score = { 5555, 4444, 3333, 2222, 1111 };
-    RankingDeta asd = new RankingDeta();
-    /*
-    [SerializeField]
-    FsSaveData2 dataController;
-    */
+   
     public enum Line
     { Center = 0, Left = 1, Right = 2, }
     public enum ControllerGrip
@@ -73,19 +61,7 @@ public class AccelerationInputSet : MonoBehaviour
 
     void Start()
     {
-        /*
-        for (int i = 0; i < 5; i++)
-        {
-            asd.name1[i] = "TextText";
-            asd.name2[i] = "TesTes";
-            asd.score[i] = 2020;
-        }*/
-        /*
-        txt.text =
-           asd.name1[0] + "&" + asd.name2[0] + asd.score[0] + "\n" + asd.name1[1] + "&" + asd.name2[1] + asd.score[1] + "\n" +
-           asd.name1[2] + "&" + asd.name2[2] + asd.score[2] + "\n" + asd.name1[3] + "&" + asd.name2[3] + asd.score[3] + "\n" +
-           asd.name1[4] + "&" + asd.name2[4] + asd.score[4] + "\n";
-           */
+       
         /*ログ用*****************************************************************************
         txt.text =
             "Left\n" + log[0, 0] + "\n" + log[0, 1] + "\n" + log[0, 2] + "\n" + log[0, 3] + "\n" + log[0, 4] + "\n\n" +
@@ -104,16 +80,7 @@ public class AccelerationInputSet : MonoBehaviour
 
     void Update()
     {
-        //if (GetInput.ButtonGet(NpadButton.ZR, Style.Down))
-            //dataController.Save(name1, name2, score);
-        //  //ログ用*****************************************************************************
-        //  if (GetInput.ButtonGet(NpadButton.ZL, Style.Down)  )
-        //    asd = dataController.Load();
-        //txt.text =
-        //asd.name1[0] + "&" + asd.name2[0] + asd.score[0] + "\n" + asd.name1[1] + "&" + asd.name2[1] + asd.score[1] + "\n" +
-        //asd.name1[2] + "&" + asd.name2[2] + asd.score[2] + "\n" + asd.name1[3] + "&" + asd.name2[3] + asd.score[3] + "\n" +
-        //asd.name1[4] + "&" + asd.name2[4] + asd.score[4] + "\n";
-        //*****************************************************************************/
+       
         //ControlvalueButton();
         /*ログ用*****************************************************************************
         if (GetInput.ButtonGet(NpadButton.ZL, Style.Down) || GetInput.ButtonGet(NpadButton.ZR, Style.Down))
@@ -140,6 +107,7 @@ public class AccelerationInputSet : MonoBehaviour
     /// <param name="handNum">コントローラーの左右　0=左　1=右</param>
     void SwingCheck(int handNum)
     {
+        if (roboCon == null) return;
         if (handNum == 0)
         {
             //左コントローラーの加速度を取得

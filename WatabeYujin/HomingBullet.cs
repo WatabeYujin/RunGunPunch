@@ -16,7 +16,7 @@ public class HomingBullet : MonoBehaviour {
     [SerializeField]
     private GameObject effect;
 
-    private const float speed = 120;
+    private const float speed = 240;
     float firstPosZ;
 	Vector3 centerPos;
 
@@ -34,19 +34,19 @@ public class HomingBullet : MonoBehaviour {
     void BulletMove()
     {
         if (!isMove) return;
-        if(homingTransform)transform.LookAt(homingTransform);
+        if(homingTransform!=null)transform.LookAt(homingTransform);
         thisRigidbody.velocity = transform.forward * speed;
-}
+    }
 
 bool DistanceCheck()
     {
-        if (firstPosZ + distance > transform.position.z) return false;
+        if (firstPosZ + distance >= transform.position.z) return false;
+        if(firstPosZ + distance >= homingTransform.position.z) return false;
         return true;
     }
 
     void DestroyEvent()
     {
-        
         Destroy(gameObject); 
     }
     void Effect()

@@ -8,7 +8,7 @@ public class TargetObject : MonoBehaviour
 	[SerializeField]
 	private AudioClip breakSE;
     [SerializeField]
-    public GameObject breakEffect; //ターゲット破壊時に生成するエフェクトのオブジェクト
+    public GameObject[] breakEffect; //ターゲット破壊時に生成するエフェクトのオブジェクト
     [SerializeField]
     public TargetType targetType;  //自身のターゲットの種類(enum)
     [SerializeField]
@@ -30,6 +30,10 @@ public class TargetObject : MonoBehaviour
     private Material skyBox;
     [SerializeField]
     private Animator anim;
+    [SerializeField]
+    private Transform effectPos;
+    [SerializeField]
+    private GameObject missEffect;
 
     private yazirusimove[] yazi = new yazirusimove[2];
     public int compositeCommand1Player = 0;//ボス用のコマンド入力
@@ -72,8 +76,8 @@ public class TargetObject : MonoBehaviour
         {
             isMove = false;
             GetComponent<BoxCollider>().enabled = false;
-        }
-        transform.eulerAngles = new Vector3(0, 180, 0);
+        }else 
+            transform.eulerAngles = new Vector3(0, 180, 0);
 		FirstTargetPositionGet ();
     }
 
@@ -152,39 +156,36 @@ public class TargetObject : MonoBehaviour
     IEnumerator CompositeBreakEvent()
     {
         const float m_bustTime = 2;
-        
         const float m_zoom = 35;
 
+        EffectSpawn(breakEffect[0]);
         isMove = false;
         Camera m_mainCamera = Camera.main;
         Quaternion m_cameraquaternion = m_mainCamera.transform.rotation;
         float m_defaltFieldview = m_mainCamera.fieldOfView;
+        m_mainCamera.transform.LookAt(transform.position + (Vector3.up * 7f));
+        Quaternion m_mainCameraRotation = m_mainCamera.transform.rotation;
+
+        m_mainCamera.fieldOfView = m_zoom;
         switch (bossType)
         {
             case BossType.Tree:
                 TreeBreak(m_bustTime);
                 break;
             case BossType.Door:
-                DoorOpen(m_bustTime);
+                DoorOpen();
                 break;
             case BossType.Rocket:
-                RocketBreak(m_bustTime);
+                yield return RocketBreak();
                 break;
             default:
                 break;
         }
-    m_mainCamera.transform.LookAt(transform.position + (Vector3.up * 7f));
-        Quaternion m_mainCameraRotation = m_mainCamera.transform.rotation;
-        
-        m_mainCamera.fieldOfView = m_zoom;
+
         yield return new WaitForSeconds(0.1f);
+        Time.timeScale = 1f;
         m_mainCamera.transform.rotation = m_cameraquaternion;
         
-        PlaySceneManager.SceneManager.GetSetNowCondition =
-                PlaySceneManager.Condition.None;
-        PlaySceneManager.SceneManager.BGMisPlay(true);
-        ComandView(0, false);
-        ComandView(1, false);
         m_mainCamera.fieldOfView = m_defaltFieldview;
         yield return new WaitForSeconds(2);
         DestroyEvent();
@@ -202,35 +203,39 @@ public class TargetObject : MonoBehaviour
         m_sequence.Join(
             transform.DORotate(new Vector3(0, 0, 3600), bustTime).SetRelative().SetEase(Ease.Linear)
         );
-        Time.timeScale = 1f;
     }
-    void DoorOpen(float bustTime)
+    void DoorOpen()
     {
+        EffectSpawn(breakEffect[0]);
         Vector3 m_playerPos = Vector3.forward * -3.5f;
         MeshExplosion.meshExplosion.Explode(transform, m_playerPos, transform.forward,90);
         transform.GetComponent<MeshRenderer>().enabled = false;
     }
-    void RocketBreak(float bustTime)
+
+    IEnumerator RocketBreak()
     {
-        const float m_slowTimeSpeed = 0.1f;
-        Time.timeScale = m_slowTimeSpeed;
-        Vector3 m_burstAngle = new Vector3(5f, 30f, 1000f);
-        Sequence m_sequence = DOTween.Sequence();
-        m_sequence.Append(
-            transform.DOLocalMove(m_burstAngle, bustTime).SetEase(Ease.Linear)
-        );
-        m_sequence.Join(
-            transform.DORotate(new Vector3(0, 0, 3600), bustTime).SetRelative().SetEase(Ease.Linear)
-        );
-        Time.timeScale = 1f;
+        Vector3 m_playerPos = Vector3.forward * -3.5f;
+        for (int i= 0; i < breakEffect.Length-1; i++)
+        {
+            breakEffect[i].SetActive(true);
+            yield return new WaitForSeconds (0.3f);
+        }
+        breakEffect[breakEffect.Length-1].SetActive(true);
+        yield return new WaitForSeconds(0.3f);
+        for (int i = 0; i < breakEffect.Length - 1; i++)
+        {
+            breakEffect[i].SetActive(false);
+        }
+        DestroyEvent();
+        transform.GetComponent<MeshRenderer>().enabled = false;
+
     }
 
     void JustBeforeMove()
     {
-        const float m_moveRange = 35f;
         if (targetMoveType == TargetMoveType.Nomal) return;
         if (targetMoveType == TargetMoveType.OutsideArea) return;
-        if (transform.position.z > m_moveRange) return;
+        if (!CompositeAreaCheck()) return;
         if (targetMoveType == TargetMoveType.ReverseLane) StartCoroutine(MoveReverseLane());
         if (targetMoveType == TargetMoveType.ReverseSide) StartCoroutine(MoveReverseSide());
     }
@@ -239,10 +244,10 @@ public class TargetObject : MonoBehaviour
     {
         PlaySceneManager.SceneManager.ComboStop();
         //ミスの処理をここに入れる//
-
+        Debug.Log("ミスエフェクト生成");
+        EffectSpawn(missEffect);
 
         //ミスの処理をここに入れる//
-        Destroy(gameObject, 0.1f);
         DestroyEvent();
     }
 
@@ -253,11 +258,14 @@ public class TargetObject : MonoBehaviour
     {
         
         isMove = false;
-        EffectSpawn();
+        if (targetType != TargetType.Composite) EffectSpawn(breakEffect[0]);
         if (targetType == TargetType.Composite)
         {
             PlaySceneManager.SceneManager.GetSetNowCondition =
                 PlaySceneManager.Condition.None;
+            PlaySceneManager.SceneManager.BGMisPlay(true);
+            ComandView(0, false);
+            ComandView(1, false);
             PlaySceneManager.SceneManager.CommandView(-1, 0);
             PlaySceneManager.SceneManager.CommandView(-1, 1);
             PlaySceneManager.SceneManager.FloorLevelUp();
@@ -270,12 +278,16 @@ public class TargetObject : MonoBehaviour
     /// <summary>
     /// BreakEffectが設定されていた場合そのエフェクトを生成する。
     /// </summary>
-    void EffectSpawn()
+    void EffectSpawn(GameObject effect)
     {
-        if (breakEffect)
+        Vector3 m_pos;
+        if (effectPos == null) m_pos = transform.position;
+        else m_pos=effectPos.position;
+        if (effect != null)
         {
-            Transform m_effectTrans = Instantiate(breakEffect).transform;
-            m_effectTrans.position = transform.position;
+            Transform m_effectTrans = Instantiate(effect).transform;
+            m_effectTrans.position = m_pos;
+            Destroy(m_effectTrans.gameObject, 1);
         }
     }
 
@@ -288,11 +300,16 @@ public class TargetObject : MonoBehaviour
 
     bool CompositeAreaCheck()
     {
-        const float m_range = 35;
-        return m_range >= transform.position.z;
+        const float m_range = 35f;
+        const float m_rangey = -100f;
+        if (m_range < transform.position.z ||
+            m_rangey > transform.position.y)
+            return false;
+        else
+            return true;
     }
 
-	void FirstTargetPositionGet(){
+    void FirstTargetPositionGet(){
         /*
         Transform m_stage = stage;   //targetに、"Sample"の名前のオブジェクトのコンポーネントを見つけてアクセスする
 
@@ -422,6 +439,7 @@ public class TargetObject : MonoBehaviour
             presentbox.parent = null;
             presentbox.GetComponent<TargetObject>().BaloonMove();
         }
+        
         ScoreEvent();
         TargetBreak();
     }
@@ -451,9 +469,10 @@ public class TargetObject : MonoBehaviour
     {
         Debug.Log("MoveReverseSide");
         targetMoveType = TargetMoveType.Nomal;
-        const float m_moveTime = 0.7f;
+        const float m_moveTime = 1.2f;
         isMove = false;
         transform.DOMoveX(-spawnPosX, m_moveTime);
+        Doudge(spawnPosX < 0);
         yield return new WaitForSeconds(m_moveTime);
         isMove = true;
         
@@ -464,7 +483,7 @@ public class TargetObject : MonoBehaviour
         isMove = false;
         Debug.Log("MoveReverseLane");
         targetMoveType = TargetMoveType.Nomal;
-        const float m_laneDifference = 5f;
+        const float m_laneDifference = 6f;
         const float m_moveTime = 0.7f;
         isMove = false;
         if (targetType==TargetType.OverArm)
@@ -528,14 +547,22 @@ public class TargetObject : MonoBehaviour
     IEnumerator DeadAnim()
     {
         const string m_deadName = "Dead";
-        Vector3 m_rotate = new Vector3(-90,180,0);
-        const float m_rotateSpeed = 0.7f;
+        const float m_deadTime = 0.7f;
         anim.SetTrigger(m_deadName);
-        transform.DORotate(m_rotate, m_rotateSpeed);
-        yield return new WaitForSeconds(m_rotateSpeed);
+        yield return new WaitForSeconds(m_deadTime);
         TargetBreak();
     }
-    
+
+    void Doudge(bool moveLeft)
+    {
+        if (anim == null) return;
+        const string m_leftDoudgeName = "LeftDodge";
+        const string m_rightDoudgeName = "RightDodge";
+        if (moveLeft)
+            anim.SetTrigger(m_leftDoudgeName);
+        else
+            anim.SetTrigger(m_rightDoudgeName);
+    }
 
     public void BaloonMove()
     {
